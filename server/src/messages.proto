@@ -1,0 +1,44 @@
+enum MessageType {
+  JOIN_ROOM_REQ = 1;
+  JOIN_ROOM_RES = 2;
+  
+  ACTION_REQ = 3;
+  ACTION_RES = 4;
+  UPDATE_NTF = 5;
+}
+
+message Entity {
+  required uint32 id = 1;
+  required int32 src = 2;
+  required int32 dst = 3;
+  required double offset = 4;
+  required int32 direction = 5;
+  required int32 next_direction = 6;
+}
+
+message JoinRoomReq {
+  required uint32 room_id = 1;
+}
+
+message JoinRoomRes {
+  required uint32 room_id = 1;
+  required uint32 player_id = 2;
+  required Entity entity = 3;
+}
+
+
+message ActionReq {
+  required int32 direction = 1;
+}
+
+message ActionRes {
+}
+
+message UpdateNtf {
+  repeated Entity entities = 1;
+}
+
+message Message {
+  required MessageType type = 1;
+  required bytes data = 2;
+}

@@ -1,0 +1,12 @@
+deps
+ebin
+relx
+_rel
+.erlang.mk/
+c_src/env.mk
+*.o
+*.beam
+*.d
+*.so
+*.dump
+
