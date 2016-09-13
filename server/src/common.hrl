@@ -1,8 +1,11 @@
 -include("messages_pb.hrl").
+%% types
+-type entity() :: #entity{}.
+
 
 -define(LEFT, 1).
 -define(RIGHT, 2).
 -define(UP, 3).
 -define(DOWN, 4).
--define(BASE_SPEED, 3).
--define(TICK, 50).
+-define(BASE_SPEED, 6).
+-define(TICK, 15).

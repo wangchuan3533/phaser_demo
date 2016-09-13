@@ -16,6 +16,13 @@ message Entity {
   required int32 next_direction = 6;
 }
 
+message CheckpointReq {
+  required uint32 id = 1;
+  required int32 src = 2;
+  required int32 dst = 3;
+  required uint32 offset = 4;
+}
+
 message JoinRoomReq {
   required uint32 room_id = 1;
 }
@@ -29,9 +36,11 @@ message JoinRoomRes {
 
 message ActionReq {
   required int32 direction = 1;
+  required uint32 ts = 2;
 }
 
 message ActionRes {
+  required uint32 ts = 1;
 }
 
 message UpdateNtf {

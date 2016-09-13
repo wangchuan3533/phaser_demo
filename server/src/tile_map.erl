@@ -17,7 +17,7 @@
   test/0
 ]).
 
--record(map_data, {
+-record(tile_map, {
   width,
   height,
   node_count,
@@ -89,7 +89,7 @@ load(PathFile, EdgeFile) ->
             end,
             dict:store(Src, Node, Dict)
           end, dict:new(), lists:seq(0, EdgeCount - 1)),
-          {ok, #map_data{
+          {ok, #tile_map{
             width = Width,
             height = Height,
             node_count = NodeCount,
@@ -107,25 +107,25 @@ load(PathFile, EdgeFile) ->
       error
   end.
 
-is_wall(#map_data{width = Width, height = Height}, X, Y) when X < 0; X >= Width; Y < 0; Y >= Height ->
+is_wall(#tile_map{width = Width, height = Height}, X, Y) when X < 0; X >= Width; Y < 0; Y >= Height ->
   true;
 
-is_wall(#map_data{width = Width, index2node = Index2Node}, X, Y) ->
+is_wall(#tile_map{width = Width, index2node = Index2Node}, X, Y) ->
   Index = Y * Width + X,
   case dict:find(Index, Index2Node) of
     {ok, _NodeId} -> false;
     error -> true
   end.
 
-is_road(MapData, X, Y) -> not is_wall(MapData, X, Y).
+is_road(TileMap, X, Y) -> not is_wall(TileMap, X, Y).
 
-xy2index(#map_data{width = Width}, X, Y) -> Y * Width + X.
+xy2index(#tile_map{width = Width}, X, Y) -> Y * Width + X.
 
-index2xy(#map_data{width = Width}, Index) -> {Index rem Width, Index div Width}.
+index2xy(#tile_map{width = Width}, Index) -> {Index rem Width, Index div Width}.
 
-edge2xy(MapData, Src, Dst, Offset) ->
-  {X1, Y1} = index2xy(MapData, Src),
-  {X2, Y2} = index2xy(MapData, Dst),
+edge2xy(TileMap, Src, Dst, Offset) ->
+  {X1, Y1} = index2xy(TileMap, Src),
+  {X2, Y2} = index2xy(TileMap, Dst),
   
   if
     X2 > X1 ->
@@ -140,43 +140,43 @@ edge2xy(MapData, Src, Dst, Offset) ->
       {X1, Y1}
   end.
 
-edge_distance(MapData, Src, Dst) ->
-  {X1, Y1} = index2xy(MapData, Src),
-  {X2, Y2} = index2xy(MapData, Dst),
+edge_distance(TileMap, Src, Dst) ->
+  {X1, Y1} = index2xy(TileMap, Src),
+  {X2, Y2} = index2xy(TileMap, Dst),
   abs(X2 - X1) + abs(Y2 - Y1).
 
-lookup_path(#map_data{node_count = NodeCount, index2node = Index2Node, directions = Directions}, Index1, Index2) ->
+lookup_path(#tile_map{node_count = NodeCount, index2node = Index2Node, directions = Directions}, Index1, Index2) ->
   {ok, NodeId1} = dict:fetch(Index1, Index2Node),
   {ok, NodeId2} = dict:fetch(Index2, Index2Node),
   Offset = NodeId1 * NodeCount + NodeId2,
   <<Direction:8/little>> = binary:part(Directions, Offset, 1),
   Direction.
 
-random_position(MapData = #map_data{node_count = NodeCount, node2index = Node2Index}) ->
+random_position(TileMap = #tile_map{node_count = NodeCount, node2index = Node2Index}) ->
   _OldSeed = random:seed(),
   NodeId = random:uniform(NodeCount) - 1,
   <<Index:32/little>> = binary:part(Node2Index, NodeId, 4),
-  index2xy(MapData, Index).
+  index2xy(TileMap, Index).
 
-get_edge(#map_data{edges = Edges}, Index) ->
+get_edge(#tile_map{edges = Edges}, Index) ->
   <<Src:32/little, Dst:32/little, Direction:32/little>> = binary:part(Edges, Index * 12, 12),
   {Src, Dst, Direction}.
 
-random_edge(MapData = #map_data{edge_count = EdgeCount}) ->
+random_edge(TileMap = #tile_map{edge_count = EdgeCount}) ->
   _OldSeed = random:seed(),
   Index = random:uniform(EdgeCount) - 1,
-  get_edge(MapData, Index).
+  get_edge(TileMap, Index).
   
-lookup_edge(#map_data{graph = Graph}, Src, Direction) ->
+lookup_edge(#tile_map{graph = Graph}, Src, Direction) ->
   case dict:find(Src, Graph) of
     {ok, Node} -> access_node(Node, Direction);
     error -> -1
   end.
 
 test() ->
-  {ok, MapData} = load(<<"../../../shared/map/64.tmx.path.data">>, <<"../../../shared/map/64.tmx.edge.data">>),
-  true = is_road(MapData, 1, 0),
-  false = is_wall(MapData, 1, 0),
-  1 = xy2index(MapData, 1, 0),
-  {1, 0} = index2xy(MapData, 1),
+  {ok, TileMap} = load(<<"../../../shared/map/64.tmx.path.data">>, <<"../../../shared/map/64.tmx.edge.data">>),
+  true = is_road(TileMap, 1, 0),
+  false = is_wall(TileMap, 1, 0),
+  1 = xy2index(TileMap, 1, 0),
+  {1, 0} = index2xy(TileMap, 1),
   ok.

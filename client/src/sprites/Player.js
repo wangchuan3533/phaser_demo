@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import Entity from './Entity'
 import {Direction, TILE_SIZE, Latency} from '../const'
 import {Message, MessageType, Protocols, decode} from '../protocol'
-const speed = 3
+const speed = 6
 
 export default class Player extends Entity {
   constructor(opts) {
@@ -12,7 +12,7 @@ export default class Player extends Entity {
     this.animations.add('left', [0, 1, 2, 3], 10, true)
     this.animations.add('right', [5, 6, 7, 8], 10, true)
     
-    this.origScale = 0.5
+    this.origScale = 1
     this.scale.setTo(this.origScale, this.origScale)
     
     this.graph = opts.graph
@@ -90,9 +90,10 @@ export default class Player extends Entity {
     }
   }
   
-  sendAction(direction) {
+  sendAction(direction, next_direction) {
     const {ActionReq} = Protocols
-    const req = new ActionReq({direction})
+    const ts = Date.now() & 0xffffffff
+    const req = new ActionReq({direction, ts})
     const message = new Message({type: MessageType.ACTION_REQ, data: req.toArrayBuffer()})
     setTimeout(() => this.game.transport.send(message.toArrayBuffer()), Latency.random())
   }

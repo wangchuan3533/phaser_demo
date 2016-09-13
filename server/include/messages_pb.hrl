@@ -29,14 +29,15 @@
 -ifndef(ACTIONREQ_PB_H).
 -define(ACTIONREQ_PB_H, true).
 -record(actionreq, {
-    direction = erlang:error({required, direction})
+    direction = erlang:error({required, direction}),
+    ts = erlang:error({required, ts})
 }).
 -endif.
 
 -ifndef(ACTIONRES_PB_H).
 -define(ACTIONRES_PB_H, true).
 -record(actionres, {
-    
+    ts = erlang:error({required, ts})
 }).
 -endif.
 

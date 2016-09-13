@@ -21,12 +21,13 @@ export default class extends Phaser.State {
     const graphics = this.add.graphics(0, 0)
     
     // draw roads
-    graphics.lineStyle(1, 0xffff00, 1)
+    graphics.lineStyle(1, 0xafafaf, 1)
     graphics.beginFill(0xafafaf, 1)
     
     for (let index in this.map.nodeIdMap) {
       const {x, y} = this.map.index2xy(index);
-      graphics.drawRect(x * TILE_SIZE + border, y * TILE_SIZE + border, TILE_SIZE - 2 * border, TILE_SIZE - 2 * border)
+      const extra = 5;
+      graphics.drawRect(x * TILE_SIZE + border - extra, y * TILE_SIZE + border - extra, TILE_SIZE - 2 * border + 2 * extra, TILE_SIZE - 2 * border + 2 * extra)
     }
     
     graphics.endFill()
@@ -91,9 +92,19 @@ export default class extends Phaser.State {
           
           if (entity.id == this.player.id) {
             setTimeout(() => {
+              this.shadow.src = entity.src;
+              this.shadow.dst = entity.dst;
+              this.shadow.offset = entity.offset;
               this.shadow.x = (x + 0.5) * TILE_SIZE
               this.shadow.y = (y + 0.5) * TILE_SIZE
-              if (Math.abs(this.shadow.x - this.player.x) + Math.abs(this.shadow.y - this.player.y) > 5 * TILE_SIZE) {
+              //if (Math.abs(this.shadow.x - this.player.x) + Math.abs(this.shadow.y - this.player.y) > 5 * TILE_SIZE) {
+              if (this.shadow.src != this.player.src) {
+                this.diffCount++
+              } else {
+                this.diffCount = 0
+              }
+              if (false && this.diffCount > 5) {
+                console.log('fix')
                 this.player.src = entity.src
                 this.player.dst = entity.dst
                 this.player.offset = entity.offset

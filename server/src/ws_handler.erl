@@ -9,7 +9,7 @@
 -export([websocket_terminate/3]).
 
 -record(state, {
-  scene
+  player :: pid()
 }).
 
 init(_, _, _) ->
@@ -17,15 +17,16 @@ init(_, _, _) ->
 
 websocket_init(_, Req, _Opts) ->
   Req2 = cowboy_req:compact(Req),
-  {ok, Req2, #state{scene = scene}}.
+  {ok, Player} = player:start_link({self()}),
+  {ok, Req2, #state{player = Player}}.
 
 websocket_handle({text, Data}, Req, State) ->
   {reply, {text, Data}, Req, State};
 
-websocket_handle({binary, Data}, Req, State = #state{scene = Scene}) ->
+websocket_handle({binary, Data}, Req, State = #state{player = Player}) ->
   Request = protocol:decode(Data),
   ok = io:format("req: ~p~n", [Request]),
-  Response = gen_server:call(Scene, Request),
+  Response = gen_server:call(Player, Request),
   ok = io:format("res: ~p~n", [Response]),
   {reply, {binary, protocol:encode(Response)}, Req, State};
   
@@ -40,4 +41,5 @@ websocket_info(_Info, Req, State) ->
   {ok, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
+  % TODO: kill player
   ok.
