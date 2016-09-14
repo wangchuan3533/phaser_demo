@@ -24,8 +24,8 @@ export default class extends Phaser.State {
     this.load.spritesheet('dude', 'assets/images/dude.png', 32, 48)
     this.load.spritesheet('baddie', 'assets/images/baddie.png', 32, 32)
     
-    this.load.binary('path', 'assets/map/64.tmx.path.data')
-    this.load.binary('edge', 'assets/map/64.tmx.edge.data')
+    this.load.binary('path', 'assets/map/6.tmx.path.data')
+    this.load.binary('edge', 'assets/map/6.tmx.edge.data')
   }
   
   render () {

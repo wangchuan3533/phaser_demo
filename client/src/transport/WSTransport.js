@@ -1,3 +1,4 @@
+import {Latency} from '../const'
 export default class WSTransport {
   constructor() {
     this.cbs = {
@@ -39,6 +40,6 @@ export default class WSTransport {
   }
   
   send(data) {
-    this.ws.send(data)
+    setTimeout(() => this.ws.send(data), Latency.random())
   }
 }

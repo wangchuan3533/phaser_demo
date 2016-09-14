@@ -4,16 +4,34 @@
     id = erlang:error({required, id}),
     src = erlang:error({required, src}),
     dst = erlang:error({required, dst}),
+    offset = erlang:error({required, offset})
+}).
+-endif.
+
+-ifndef(CHECKPOINTREQ_PB_H).
+-define(CHECKPOINTREQ_PB_H, true).
+-record(checkpointreq, {
+    id = erlang:error({required, id}),
+    src = erlang:error({required, src}),
+    dst = erlang:error({required, dst}),
     offset = erlang:error({required, offset}),
-    direction = erlang:error({required, direction}),
-    next_direction = erlang:error({required, next_direction})
+    ts = erlang:error({required, ts})
+}).
+-endif.
+
+-ifndef(CHECKPOINTRES_PB_H).
+-define(CHECKPOINTRES_PB_H, true).
+-record(checkpointres, {
+    ret = erlang:error({required, ret}),
+    ts = erlang:error({required, ts})
 }).
 -endif.
 
 -ifndef(JOINROOMREQ_PB_H).
 -define(JOINROOMREQ_PB_H, true).
 -record(joinroomreq, {
-    room_id = erlang:error({required, room_id})
+    room_id = erlang:error({required, room_id}),
+    ts = erlang:error({required, ts})
 }).
 -endif.
 
@@ -23,21 +41,6 @@
     room_id = erlang:error({required, room_id}),
     player_id = erlang:error({required, player_id}),
     entity = erlang:error({required, entity})
-}).
--endif.
-
--ifndef(ACTIONREQ_PB_H).
--define(ACTIONREQ_PB_H, true).
--record(actionreq, {
-    direction = erlang:error({required, direction}),
-    ts = erlang:error({required, ts})
-}).
--endif.
-
--ifndef(ACTIONRES_PB_H).
--define(ACTIONRES_PB_H, true).
--record(actionres, {
-    ts = erlang:error({required, ts})
 }).
 -endif.
 

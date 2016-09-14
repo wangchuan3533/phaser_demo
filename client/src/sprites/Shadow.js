@@ -7,7 +7,7 @@ export default class Shadow extends Entity {
     opts.asset = opts.asset || 'dude'
     super(opts)
     
-    this.origScale = 1
+    this.origScale = 0.8
     this.scale.setTo(this.origScale, this.origScale)
     this.alpha = 0.5
   }

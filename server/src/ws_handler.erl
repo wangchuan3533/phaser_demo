@@ -34,7 +34,7 @@ websocket_handle(_Frame, Req, State) ->
   {ok, Req, State}.
 
 websocket_info(Ntf = #updatentf{}, Req, State) ->
-  %ok = io:format("ntf: ~p~n", [Ntf]),
+  %% ok = io:format("ntf: ~p~n", [Ntf]),
   {reply, {binary, protocol:encode(Ntf)}, Req, State};
   
 websocket_info(_Info, Req, State) ->

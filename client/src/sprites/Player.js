@@ -12,7 +12,7 @@ export default class Player extends Entity {
     this.animations.add('left', [0, 1, 2, 3], 10, true)
     this.animations.add('right', [5, 6, 7, 8], 10, true)
     
-    this.origScale = 1
+    this.origScale = 0.8
     this.scale.setTo(this.origScale, this.origScale)
     
     this.graph = opts.graph
@@ -20,15 +20,15 @@ export default class Player extends Entity {
     this.src = opts.src
     this.dst = -1
     this.now = this.game.time.time
+    this.checkpoint = 0
   }
-  
   
   update() {
     const dt = this.game.time.time - this.now
-    const delta = speed * dt / 1000
+    const delta = Math.floor(speed * dt * 0x10000 / 1000)
     this.now = this.game.time.time
     
-    if (this.src >= 0 && this.dst >= 0 && this.offset < this.offsetMax) {
+    if (this.src >= 0 && this.dst >= 0) {
       this.offset += delta
       const {x, y} = this.map.edge2xy(this.src, this.dst, this.offset)
       this.x = (x + 0.5) * TILE_SIZE
@@ -56,11 +56,11 @@ export default class Player extends Entity {
           this.nextDirection = -1
           this.offset = 0
         }
+        this.sendCheckpoint()
+      } else if (this.now - this.lastCheckpoint > 50) {
+        this.lastCheckpoint = this.now
+        this.sendCheckpoint()
       }
-    } else {
-      const {x, y} = this.map.edge2xy(this.src, this.dst, this.offset)
-      this.x = (x + 0.5) * TILE_SIZE
-      this.y = (y + 0.5) * TILE_SIZE
     }
   }
   
@@ -84,6 +84,7 @@ export default class Player extends Entity {
       this.direction = direction
       this.nextDirection = -1
       this.sendAction(direction)
+      this.sendCheckpoint()
     } else if (this.direction != direction && this.nextDirection!= direction) {
       this.nextDirection = direction
       this.sendAction(direction)
@@ -91,10 +92,23 @@ export default class Player extends Entity {
   }
   
   sendAction(direction, next_direction) {
+    return
+
     const {ActionReq} = Protocols
-    const ts = Date.now() & 0xffffffff
+    const ts = this.now & 0xffffffff
     const req = new ActionReq({direction, ts})
     const message = new Message({type: MessageType.ACTION_REQ, data: req.toArrayBuffer()})
     setTimeout(() => this.game.transport.send(message.toArrayBuffer()), Latency.random())
+  }
+  
+  sendCheckpoint() {
+    const {CheckpointReq} = Protocols
+    const ts = this.now & 0xffffffff
+    const id = this.checkpoint++
+    const {src, dst} = this
+    const offset = Math.floor(this.offset)
+    const req = new CheckpointReq({id, src, dst, offset, ts})
+    const message = new Message({type: MessageType.CHECKPOINT_REQ, data: req.toArrayBuffer()})
+    this.game.transport.send(message.toArrayBuffer())
   }
 }

@@ -1,4 +1,4 @@
-export const TILE_SIZE = 40
+export const TILE_SIZE = 30
 export const Direction = {
   LEFT: 1,
   RIGHT: 2,

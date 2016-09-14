@@ -37,19 +37,21 @@ export default class TileMap {
   
   edge2xy(src, dst, offset) {
     const p1 = this.index2xy(src)
+    if (dst < 0) return p1
     const p2 = this.index2xy(dst)
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
+    const delta = Math.min(offset, this.edgeDistance(src, dst)) / 0x10000
     
     let {x, y} = p1
     if (dx > 0) {
-      x += offset
+      x += delta
     } else if (dx < 0) {
-      x -= offset
+      x -= delta
     } else if (dy > 0) {
-      y += offset
+      y += delta
     } else if (dy < 0) {
-      y -= offset
+      y -= delta
     }
     
     return {x, y}
@@ -61,7 +63,7 @@ export default class TileMap {
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
     
-    return Math.abs(dx) + Math.abs(dy)
+    return 0x10000 * Math.floor((Math.abs(dx) + Math.abs(dy)))
   }
   
   lookup(index1, index2) {

@@ -10,10 +10,10 @@ decode(Bin) ->
       messages_pb:decode_joinroomreq(Data);
     #message{type = 'JOIN_ROOM_RES', data = Data} ->
       messages_pb:decode_joinroomres(Data);
-    #message{type = 'ACTION_REQ', data = Data} ->
-      messages_pb:decode_actionreq(Data);
-    #message{type = 'ACTION_RES', data = Data} ->
-      messages_pb:decode_actionres(Data);
+    #message{type = 'CHECKPOINT_REQ', data = Data} ->
+      messages_pb:decode_checkpointreq(Data);
+    #message{type = 'CHECKPOINT_RES', data = Data} ->
+      messages_pb:decode_checkpointres(Data);
     #message{type = 'UPDATE_NTF', data = Data} ->
       messages_pb:decode_updatentf(Data);
     _Other ->
@@ -27,10 +27,10 @@ encode(Msg) ->
       messages_pb:encode(#message{type = 'JOIN_ROOM_REQ', data = Encoded});
     #joinroomres{} ->
       messages_pb:encode(#message{type = 'JOIN_ROOM_RES', data = Encoded});
-    #actionreq{} ->
-      messages_pb:encode(#message{type = 'ACTION_REQ', data = Encoded});
-    #actionres{} ->
-      messages_pb:encode(#message{type = 'ACTION_RES', data = Encoded});
+    #checkpointreq{} ->
+      messages_pb:encode(#message{type = 'CHECKPOINT_REQ', data = Encoded});
+    #checkpointres{} ->
+      messages_pb:encode(#message{type = 'CHECKPOINT_RES', data = Encoded});
     #updatentf{} ->
       messages_pb:encode(#message{type = 'UPDATE_NTF', data = Encoded});
     _Other ->

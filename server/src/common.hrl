@@ -9,3 +9,4 @@
 -define(DOWN, 4).
 -define(BASE_SPEED, 6).
 -define(TICK, 15).
+-define(LATENCY_WINDOW_SIZE, 64).

@@ -26,7 +26,7 @@ export default class extends Phaser.State {
     
     for (let index in this.map.nodeIdMap) {
       const {x, y} = this.map.index2xy(index);
-      const extra = 5;
+      const extra = TILE_SIZE >> 1;
       graphics.drawRect(x * TILE_SIZE + border - extra, y * TILE_SIZE + border - extra, TILE_SIZE - 2 * border + 2 * extra, TILE_SIZE - 2 * border + 2 * extra)
     }
     
@@ -72,58 +72,46 @@ export default class extends Phaser.State {
   }
   
   onMessage(evt) {
-    const message = decode(evt.data)
-    switch (message.type) {
-      case MessageType.JOIN_ROOM_RES:
-        this.player.src = message.entity.src
-        this.player.dst = message.entity.dst
-        this.player.offset = message.entity.offset
-        this.player.id = message.entity.id
-        
-        this.shadow.src = message.entity.src
-        this.shadow.dst = message.entity.dst
-        this.shadow.offset = message.entity.offset
-        this.shadow.id = message.entity.id
-        break
-      case MessageType.UPDATE_NTF:
-        for (let i = 0, len = message.entities.length; i < len; i++) {
-          const entity = message.entities[i]
-          const {x, y} = this.map.edge2xy(entity.src, entity.dst, entity.offset)
+    setTimeout(() => {
+      const message = decode(evt.data)
+      switch (message.type) {
+        case MessageType.JOIN_ROOM_RES:
+          this.player.src = message.entity.src
+          this.player.dst = message.entity.dst
+          this.player.offset = message.entity.offset
+          this.player.id = message.entity.id
           
-          if (entity.id == this.player.id) {
-            setTimeout(() => {
+          this.shadow.src = message.entity.src
+          this.shadow.dst = message.entity.dst
+          this.shadow.offset = message.entity.offset
+          this.shadow.id = message.entity.id
+          break
+        case MessageType.UPDATE_NTF:
+          for (let i = 0, len = message.entities.length; i < len; i++) {
+            const entity = message.entities[i]
+            const {x, y} = this.map.edge2xy(entity.src, entity.dst, entity.offset)
+            
+            if (entity.id == this.player.id) {
               this.shadow.src = entity.src;
               this.shadow.dst = entity.dst;
-              this.shadow.offset = entity.offset;
+              this.shadow.offset = entity.offset
               this.shadow.x = (x + 0.5) * TILE_SIZE
               this.shadow.y = (y + 0.5) * TILE_SIZE
-              //if (Math.abs(this.shadow.x - this.player.x) + Math.abs(this.shadow.y - this.player.y) > 5 * TILE_SIZE) {
-              if (this.shadow.src != this.player.src) {
-                this.diffCount++
-              } else {
-                this.diffCount = 0
-              }
-              if (false && this.diffCount > 5) {
-                console.log('fix')
-                this.player.src = entity.src
-                this.player.dst = entity.dst
-                this.player.offset = entity.offset
-                this.player.direction = entity.direction
-                this.player.nextDirection = entity.next_direction
-              }
-            }, Latency.random())
+            }
           }
-        }
-        //console.log(message.entities)
-        break
-      default:
-        
-    }
+          //console.log(message.entities)
+          break
+        default:
+          
+      }
+    }, Latency.random())
   }
   
   joinRoom() {
     const {JoinRoomReq} = Protocols
-    const req = new JoinRoomReq({room_id: 0})
+    const room_id = 0
+    const ts = this.game.time.time
+    const req = new JoinRoomReq({room_id, ts})
     const message = new Message({type: MessageType.JOIN_ROOM_REQ, data: req.toArrayBuffer()})
     this.game.transport.send(message.toArrayBuffer())
   }
