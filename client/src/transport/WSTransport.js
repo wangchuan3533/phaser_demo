@@ -9,7 +9,7 @@ export default class WSTransport {
   }
   
   connect() {
-    const ws = new WebSocket('ws://127.0.0.1:8888/ws')
+    const ws = new WebSocket('ws://192.168.31.210:8888/ws')
     ws.binaryType = 'arraybuffer'
     ws.onopen = this.opencb.bind(this)
     ws.onclose = this.closecb.bind(this)

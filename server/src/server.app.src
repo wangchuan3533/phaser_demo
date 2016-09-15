@@ -3,6 +3,6 @@
   {vsn, "0.0.1"},
   {modules, ['player','protocol','scene','server_app','server_sup','tile_map','ws_handler', 'messages_pb']},
   {registered, [server_sup]},
-  {applications, [kernel,stdlib,cowboy,jiffy,protobuffs,ejwt,mnesia]},
+  {applications, [kernel,stdlib,cowboy,jiffy,protobuffs,mnesia]},
   {mod, {server_app, []}}
 ]}.

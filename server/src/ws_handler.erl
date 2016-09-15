@@ -25,16 +25,16 @@ websocket_handle({text, Data}, Req, State) ->
 
 websocket_handle({binary, Data}, Req, State = #state{player = Player}) ->
   Request = protocol:decode(Data),
-  ok = io:format("req: ~p~n", [Request]),
+  % ok = io:format("[req] ~p~n", [Request]),
   Response = gen_server:call(Player, Request),
-  ok = io:format("res: ~p~n", [Response]),
+  % ok = io:format("[res] ~p~n", [Response]),
   {reply, {binary, protocol:encode(Response)}, Req, State};
   
 websocket_handle(_Frame, Req, State) ->
   {ok, Req, State}.
 
 websocket_info(Ntf = #updatentf{}, Req, State) ->
-  %% ok = io:format("ntf: ~p~n", [Ntf]),
+  %% ok = io:format("[ntf] ~p~n", [Ntf]),
   {reply, {binary, protocol:encode(Ntf)}, Req, State};
   
 websocket_info(_Info, Req, State) ->

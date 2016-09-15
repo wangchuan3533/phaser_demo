@@ -36,11 +36,13 @@ message JoinRoomReq {
 message JoinRoomRes {
   required uint32 room_id = 1;
   required uint32 player_id = 2;
-  required Entity entity = 3;
+  repeated Entity entities = 3;
+  required uint32 ts = 4;
 }
 
 message UpdateNtf {
   repeated Entity entities = 1;
+  required uint32 ts = 2;
 }
 
 message Message {

@@ -24,6 +24,8 @@
 -record(state, {
   tick :: integer(),
   now :: integer(),
+  start_time :: integer(),
+  elapsed :: integer(),
   tile_map,
   timer :: timer:tref(),
   player_id_seed :: integer(),
@@ -43,6 +45,23 @@ broadcast(Players, Msg) ->
     Pid ! Msg
   end, Players).
   
+sync_entity(Entity = #entity{src = Src1, dst = Dst1, offset = Offset1}, #checkpointreq{src = Src2, dst = Dst2, offset = Offset2}, TileMap) ->
+  Total = tile_map:edge_distance(TileMap, Src1, Dst1) * 16#10000,
+  ok = if
+    Src1 == Src2, Dst1 == Dst2 ->
+    Delta = (Offset2 - Offset1) / 16#10000,
+    ok = io:format("[sync] same src, same dst delta = ~p~n", [Delta]);
+  Src1 == Dst2, Dst1 == Src2 ->
+    Delta = (Total - Offset1 - Offset2) / 16#10000,
+    ok = io:format("[sync] opposite src, dst delta = ~p~n", [Delta]);
+  Dst1 == Src2 ->
+    Delta = (Offset1 - Total - Offset2) / 16#10000,
+    ok = io:format("[sync] branch, delta = ~p~n", [Delta]);
+  true ->
+    ok
+  end,
+  Entity#entity{src = Src2, dst = Dst2, offset = Offset2}.
+  
 update_entity(Entity = #entity{offset = Offset}, Interval, _TileMap) ->
   Offset1 = Offset + ?BASE_SPEED * Interval * 16#10000 div 1000,
   Entity#entity{offset = Offset1}.
@@ -51,21 +70,24 @@ update_entity(Entity = #entity{offset = Offset}, Interval, _TileMap) ->
 init([]) ->
   {ok, TileMap} = tile_map:load(<<"../../../shared/map/6.tmx.path.data">>, <<"../../../shared/map/6.tmx.edge.data">>),
   Timer = erlang:send_after(?TICK, self(), tick),
-  {ok, #state{tile_map = TileMap, player_id_seed = 1, timer = Timer, players = [], tick = 0, now = 16#ffffffff band erlang:system_time(milli_seconds)}}.
+  StartTime = erlang:system_time(milli_seconds),
+  {ok, #state{tile_map = TileMap, player_id_seed = 1, timer = Timer, players = [], tick = 0, start_time = StartTime, now = 16#ffffffff band erlang:system_time(milli_seconds)}}.
 
 handle_call(#joinroomreq{room_id = _RoomId, ts = Ts}, {Pid, _Tag}, State = #state{now = Now, tile_map = TileMap, player_id_seed = PlayerId, players = Players}) ->
   ok = io:format("join from ~p~n", [Pid]),
   {Src, _Dst, _Direction} = tile_map:random_edge(TileMap),
   Entity = #entity{id = PlayerId, src = Src, dst = -1, offset = 0},
   Player = #player_state{pid = Pid, player_id = PlayerId, entity = Entity, checkpoints = queue:new(), avg_latency = Now - Ts},
-  {reply, #joinroomres{room_id = 1, player_id = PlayerId, entity = Entity}, State#state{player_id_seed = PlayerId + 1, players = [Player | Players]}};
+  Players1 = [Player | Players],
+  Entities = lists:map(fun(#player_state{entity = E}) -> E end, Players1),
+  {reply, #joinroomres{room_id = 1, player_id = PlayerId, entities = Entities, ts = Now}, State#state{player_id_seed = PlayerId + 1, players = [Player | Players]}};
   
 handle_call(Checkpoint = #checkpointreq{ts = Ts}, {Pid, _Tag}, State = #state{now = Now, players = Players}) ->
   Player = lists:keyfind(Pid, #player_state.pid, Players),
   Latency = Now - Ts,
   #player_state{checkpoints = Checkpoints, avg_latency = AvgLantency} = Player,
   AvgLantency1 = AvgLantency + (Latency - AvgLantency) / ?LATENCY_WINDOW_SIZE,
-  ok = io:format("avg_latency ~p~n", [AvgLantency1]),
+  % ok = io:format("[latency] avg ~p~n", [AvgLantency1]),
   Checkpoints1 = queue:in(Checkpoint, Checkpoints),
   Player1 = Player#player_state{checkpoints = Checkpoints1, avg_latency = AvgLantency1},
   Players1 = lists:keyreplace(Pid, #player_state.pid, Players, Player1),
@@ -82,10 +104,9 @@ handle_info(tick, State = #state{tile_map = TileMap, timer = OldTimer, players =
   DT = Timestamp1 - Timestamp,
   Players1 = lists:map(fun(Player = #player_state{entity = Entity, checkpoints = Checkpoints, avg_latency = AvgLantency}) ->
     case queue:peek(Checkpoints) of
-      {value, #checkpointreq{ts = Ts, src = Src, dst = Dst, offset = Offset}} when Timestamp - Ts >= AvgLantency ->
-        Latency = Timestamp - Ts,
-        ok = io:format("latency ~p~n", [Latency]),
-        Entity1 = Entity#entity{src = Src, dst = Dst, offset = Offset},
+      {value, Checkpoint = #checkpointreq{ts = Ts}} when Timestamp - Ts >= AvgLantency ->
+        ok = io:format("[latency] tick ~p~n", [Timestamp - Ts]),
+        Entity1 = sync_entity(Entity, Checkpoint, TileMap),
         Entity2 = update_entity(Entity1, DT, TileMap),
         Checkpoints1 = queue:drop(Checkpoints),
         Player#player_state{entity = Entity2, checkpoints = Checkpoints1};
@@ -95,8 +116,8 @@ handle_info(tick, State = #state{tile_map = TileMap, timer = OldTimer, players =
     end
   end, Players),
   Entities = lists:map(fun(#player_state{entity = Entity}) -> Entity end, Players1),
-  ok = case Tick rem 1 of
-    0 -> broadcast(Players, #updatentf{entities = Entities});
+  ok = case Tick rem 4 of
+    0 -> broadcast(Players, #updatentf{entities = Entities, ts = Timestamp1});
     _ -> ok
   end,
   Timer = erlang:send_after(?TICK, self(), tick),

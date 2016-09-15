@@ -153,8 +153,8 @@ lookup_path(#tile_map{node_count = NodeCount, index2node = Index2Node, direction
   Direction.
 
 random_position(TileMap = #tile_map{node_count = NodeCount, node2index = Node2Index}) ->
-  _OldSeed = random:seed(),
-  NodeId = random:uniform(NodeCount) - 1,
+  _ = rand:uniform(NodeCount),
+  NodeId = rand:uniform(NodeCount) - 1,
   <<Index:32/little>> = binary:part(Node2Index, NodeId, 4),
   index2xy(TileMap, Index).
 
@@ -163,8 +163,8 @@ get_edge(#tile_map{edges = Edges}, Index) ->
   {Src, Dst, Direction}.
 
 random_edge(TileMap = #tile_map{edge_count = EdgeCount}) ->
-  _OldSeed = random:seed(),
-  Index = random:uniform(EdgeCount) - 1,
+  _ = rand:uniform(EdgeCount),
+  Index = rand:uniform(EdgeCount) - 1,
   get_edge(TileMap, Index).
   
 lookup_edge(#tile_map{graph = Graph}, Src, Direction) ->

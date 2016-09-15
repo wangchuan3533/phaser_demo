@@ -1,4 +1,4 @@
-export const TILE_SIZE = 30
+export const TILE_SIZE = 20
 export const Direction = {
   LEFT: 1,
   RIGHT: 2,
@@ -37,7 +37,7 @@ export const Direction = {
 }
 
 export const Latency = {
-  MIN: 100,
+  MIN: 50,
   MAX: 100,
   random: function() {
     return this.MIN + Math.random() * (this.MAX - this.MIN)

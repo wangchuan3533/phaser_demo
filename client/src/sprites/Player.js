@@ -18,7 +18,9 @@ export default class Player extends Entity {
     this.graph = opts.graph
     this.map = opts.map
     this.src = opts.src
-    this.dst = -1
+    this.dst = opts.dst
+    this.offset = opts.offset
+    
     this.now = this.game.time.time
     this.checkpoint = 0
   }
@@ -30,9 +32,6 @@ export default class Player extends Entity {
     
     if (this.src >= 0 && this.dst >= 0) {
       this.offset += delta
-      const {x, y} = this.map.edge2xy(this.src, this.dst, this.offset)
-      this.x = (x + 0.5) * TILE_SIZE
-      this.y = (y + 0.5) * TILE_SIZE
       
       if (this.offset >= this.offsetMax) {
         const dst1 = this.graph.lookup(this.dst, this.nextDirection)
@@ -58,7 +57,6 @@ export default class Player extends Entity {
         }
         this.sendCheckpoint()
       } else if (this.now - this.lastCheckpoint > 50) {
-        this.lastCheckpoint = this.now
         this.sendCheckpoint()
       }
     }
@@ -110,5 +108,6 @@ export default class Player extends Entity {
     const req = new CheckpointReq({id, src, dst, offset, ts})
     const message = new Message({type: MessageType.CHECKPOINT_REQ, data: req.toArrayBuffer()})
     this.game.transport.send(message.toArrayBuffer())
+    this.lastCheckpoint = this.now
   }
 }

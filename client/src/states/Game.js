@@ -7,52 +7,21 @@ import Graph from '../map/Graph'
 import {Message, MessageType, Protocols, decode} from '../protocol'
 
 export default class extends Phaser.State {
-  init() {}
+  init() {
+    this.players = {}
+    this.shadows = {}
+  }
   preload() {}
 
   create() {
+    // prepare
     const path = this.cache.getBinary('path')
     this.map = new TileMap(path)
-    
     const edge = this.cache.getBinary('edge')
     this.graph = new Graph(edge)
     
-    const border = 0
-    const graphics = this.add.graphics(0, 0)
-    
-    // draw roads
-    graphics.lineStyle(1, 0xafafaf, 1)
-    graphics.beginFill(0xafafaf, 1)
-    
-    for (let index in this.map.nodeIdMap) {
-      const {x, y} = this.map.index2xy(index);
-      const extra = TILE_SIZE >> 1;
-      graphics.drawRect(x * TILE_SIZE + border - extra, y * TILE_SIZE + border - extra, TILE_SIZE - 2 * border + 2 * extra, TILE_SIZE - 2 * border + 2 * extra)
-    }
-    
-    graphics.endFill()
-    
-    const initEdge = this.graph.randomEdge()
-    const {x, y} = this.map.index2xy(initEdge.src)
-    const player = new Player({
-      game: this.game,
-      x: (x + 0.5) * TILE_SIZE,
-      y: (y + 0.5) * TILE_SIZE,
-      map: this.map,
-      graph: this.graph,
-      src: initEdge.src
-    })
-    
-    this.game.add.existing(player)
-    this.player = player
-    
-    const shadow = new Shadow({
-      game: this.game,
-      x: player.x,
-      y: player.y,
-    })
-    this.game.add.existing(shadow)
-    this.shadow = shadow
+    // create roads
+    this.createRoads()
     
     // cursors
     this.cursors = this.game.input.keyboard.createCursorKeys()
@@ -61,14 +30,67 @@ export default class extends Phaser.State {
     this.joinRoom()
     
     // regiester protocol
-    
     this.game.transport.register('message', this.onMessage.bind(this))
     
-    // show fps
+    // global functions
+    this.edge2xy = (src, dst, offset) => {
+      const {x, y} = this.map.edge2xy(src, dst, offset)
+      return {x: (x + 0.5) * TILE_SIZE, y: (y + 0.5) * TILE_SIZE}
+    }
+    
+    // debug info
     this.game.time.advancedTiming = true
     const debugInfo = this.add.text(this.world.width - 128, 32, 'debug info', { font: '16px Arial', fill: '#eeeeee', align: 'center' })
     debugInfo.anchor.setTo(0.5, 0.5)
     this.debugInfo = debugInfo
+  }
+  
+  getClientTime() {
+    return this.game.time.time & 0xffffffff
+  }
+  
+  createRoads() {
+    const border = 0
+    const graphics = this.add.graphics(0, 0)
+    
+    // draw roads
+    graphics.lineStyle(1, 0xafafaf, 1)
+    graphics.beginFill(0xafafaf, 1)
+    
+    for (let index in this.map.nodeIdMap) {
+      const {x, y} = this.map.index2xy(index)
+      const extra = TILE_SIZE >> 1
+      graphics.drawRect(x * TILE_SIZE + border - extra, y * TILE_SIZE + border - extra, TILE_SIZE - 2 * border + 2 * extra, TILE_SIZE - 2 * border + 2 * extra)
+    }
+    
+    graphics.endFill()
+    this.walls = graphics
+  }
+  
+  createPlayer(opts) {
+    const player = new Player({
+      ...opts,
+      game: this.game,
+      map: this.map,
+      graph: this.graph,
+    })
+    
+    this.game.add.existing(player)
+    this.players[opts.id] = player
+    return player
+  }
+  
+  createShadow(opts) {
+    const shadow = new Shadow({
+      ...opts,
+      game: this.game,
+      map: this.map,
+      graph: this.graph,
+    })
+    
+    this.game.add.existing(shadow)
+    this.shadows[opts.id] = shadow
+    return shadow
   }
   
   onMessage(evt) {
@@ -76,27 +98,29 @@ export default class extends Phaser.State {
       const message = decode(evt.data)
       switch (message.type) {
         case MessageType.JOIN_ROOM_RES:
-          this.player.src = message.entity.src
-          this.player.dst = message.entity.dst
-          this.player.offset = message.entity.offset
-          this.player.id = message.entity.id
-          
-          this.shadow.src = message.entity.src
-          this.shadow.dst = message.entity.dst
-          this.shadow.offset = message.entity.offset
-          this.shadow.id = message.entity.id
+          const now = this.getClientTime()
+          this.latency = now - this.joinRoomStart
+          this.timeoffset = now - message.ts
+          for (let i = 0; i < message.entities.length; i++) {
+            const entity = message.entities[i]
+            const shadow = this.createShadow(entity)
+            if (entity.id == message.player_id) {
+              const player = this.createPlayer(entity)
+              this.player = player
+              this.shadow = shadow
+            }
+          }
           break
         case MessageType.UPDATE_NTF:
+          const ts = message.ts
           for (let i = 0, len = message.entities.length; i < len; i++) {
             const entity = message.entities[i]
-            const {x, y} = this.map.edge2xy(entity.src, entity.dst, entity.offset)
-            
-            if (entity.id == this.player.id) {
-              this.shadow.src = entity.src;
-              this.shadow.dst = entity.dst;
-              this.shadow.offset = entity.offset
-              this.shadow.x = (x + 0.5) * TILE_SIZE
-              this.shadow.y = (y + 0.5) * TILE_SIZE
+            const shadow = this.shadows[entity.id]
+            if (!shadow) continue;
+            const {src, dst, offset} = entity
+            shadow.checkpoints.push({ts, src, dst, offset})
+            if (shadow.checkpoints.length > 128) {
+              shadow.checkpoints = shadow.checkpoints.slice(-128)
             }
           }
           //console.log(message.entities)
@@ -110,19 +134,54 @@ export default class extends Phaser.State {
   joinRoom() {
     const {JoinRoomReq} = Protocols
     const room_id = 0
-    const ts = this.game.time.time
+    const ts = this.game.time.time & 0xffffffff
     const req = new JoinRoomReq({room_id, ts})
     const message = new Message({type: MessageType.JOIN_ROOM_REQ, data: req.toArrayBuffer()})
     this.game.transport.send(message.toArrayBuffer())
+    this.joinRoomStart = this.getClientTime()
   }
   
   update() {
+    const lerp = 100
+    const now = (this.game.time.time & 0xffffffff) - lerp - this.timeoffset
+    
     this.debugInfo.text = `fps: ${this.game.time.fps}`
+    for (let id in this.players) {
+      const player = this.players[id]
+      const {x, y} = this.edge2xy(player.src, player.dst, player.offset)
+      player.x = x
+      player.y = y
+    }
+    for (let id in this.shadows) {
+      const shadow = this.shadows[id]
+      const checkpoints = shadow.checkpoints
+      console.log(`length = ${checkpoints.length}`)
+      
+      const fromIndex = checkpoints.findIndex((checkpoint) => {
+        return checkpoint.ts > now
+      }) - 1
+      if (fromIndex < 0) {
+        console.log('no start')
+        continue
+      }
+      const from = checkpoints[fromIndex]
+      const to = checkpoints[fromIndex + 1]
+      const fromPos = this.edge2xy(from.src, from.dst, from.offset)
+      const toPos = this.edge2xy(to.src, to.dst, to.offset)
+      const k = (now - from.ts) / (to.ts - from.ts)
+      const x = fromPos.x + (toPos.x - fromPos.x) * k
+      const y = fromPos.y + (toPos.y - fromPos.y) * k
+      
+      shadow.x = x
+      shadow.y = y
+      shadow.checkpoints = checkpoints.slice(fromIndex)
+    }
   }
   
   render() {
     const player = this.player
     const cursors = this.cursors
+    if (!player) return
     
     if (cursors.left.isDown) {
       player.move(Direction.LEFT)

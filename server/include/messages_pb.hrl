@@ -40,14 +40,16 @@
 -record(joinroomres, {
     room_id = erlang:error({required, room_id}),
     player_id = erlang:error({required, player_id}),
-    entity = erlang:error({required, entity})
+    entities = [],
+    ts = erlang:error({required, ts})
 }).
 -endif.
 
 -ifndef(UPDATENTF_PB_H).
 -define(UPDATENTF_PB_H, true).
 -record(updatentf, {
-    entities = []
+    entities = [],
+    ts = erlang:error({required, ts})
 }).
 -endif.
 
