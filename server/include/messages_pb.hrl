@@ -15,23 +15,24 @@
     src = erlang:error({required, src}),
     dst = erlang:error({required, dst}),
     offset = erlang:error({required, offset}),
-    ts = erlang:error({required, ts})
+    elapsed = erlang:error({required, elapsed}),
+    latency = erlang:error({required, latency})
 }).
 -endif.
 
 -ifndef(CHECKPOINTRES_PB_H).
 -define(CHECKPOINTRES_PB_H, true).
 -record(checkpointres, {
+    id = erlang:error({required, id}),
     ret = erlang:error({required, ret}),
-    ts = erlang:error({required, ts})
+    elapsed = erlang:error({required, elapsed})
 }).
 -endif.
 
 -ifndef(JOINROOMREQ_PB_H).
 -define(JOINROOMREQ_PB_H, true).
 -record(joinroomreq, {
-    room_id = erlang:error({required, room_id}),
-    ts = erlang:error({required, ts})
+    room_id = erlang:error({required, room_id})
 }).
 -endif.
 
@@ -41,7 +42,7 @@
     room_id = erlang:error({required, room_id}),
     player_id = erlang:error({required, player_id}),
     entities = [],
-    ts = erlang:error({required, ts})
+    elapsed = erlang:error({required, elapsed})
 }).
 -endif.
 
@@ -49,7 +50,7 @@
 -define(UPDATENTF_PB_H, true).
 -record(updatentf, {
     entities = [],
-    ts = erlang:error({required, ts})
+    elapsed = erlang:error({required, elapsed})
 }).
 -endif.
 

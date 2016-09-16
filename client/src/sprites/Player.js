@@ -71,7 +71,6 @@ export default class Player extends Entity {
         this.offsetMax = this.map.edgeDistance(this.src, this.dst)
         this.direction = direction
         this.nextDirection = -1
-        this.sendAction(direction)
       }
     } else if (direction == Direction.opposite(this.direction)) {
       const dst = this.src
@@ -81,33 +80,21 @@ export default class Player extends Entity {
       this.offset = this.offsetMax - this.offset
       this.direction = direction
       this.nextDirection = -1
-      this.sendAction(direction)
       this.sendCheckpoint()
     } else if (this.direction != direction && this.nextDirection!= direction) {
       this.nextDirection = direction
-      this.sendAction(direction)
     }
   }
-  
-  sendAction(direction, next_direction) {
-    return
 
-    const {ActionReq} = Protocols
-    const ts = this.now & 0xffffffff
-    const req = new ActionReq({direction, ts})
-    const message = new Message({type: MessageType.ACTION_REQ, data: req.toArrayBuffer()})
-    setTimeout(() => this.game.transport.send(message.toArrayBuffer()), Latency.random())
-  }
-  
   sendCheckpoint() {
     const {CheckpointReq} = Protocols
-    const ts = this.now & 0xffffffff
+    const elapsed = Math.floor(this.now - this.game.transport.start_time)
     const id = this.checkpoint++
     const {src, dst} = this
     const offset = Math.floor(this.offset)
-    const req = new CheckpointReq({id, src, dst, offset, ts})
-    const message = new Message({type: MessageType.CHECKPOINT_REQ, data: req.toArrayBuffer()})
-    this.game.transport.send(message.toArrayBuffer())
+    const latency = this.game.transport.latency
+    const req = new CheckpointReq({id, src, dst, offset, elapsed, latency})
+    this.game.transport.send(MessageType.CHECKPOINT_REQ, req)
     this.lastCheckpoint = this.now
   }
 }

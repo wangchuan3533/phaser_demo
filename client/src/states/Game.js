@@ -4,7 +4,7 @@ import Shadow from '../sprites/Shadow'
 import {Direction, TILE_SIZE, Latency} from '../const'
 import TileMap from '../map/TileMap'
 import Graph from '../map/Graph'
-import {Message, MessageType, Protocols, decode} from '../protocol'
+import {Message, MessageType, Protocols} from '../protocol'
 
 export default class extends Phaser.State {
   init() {
@@ -46,7 +46,7 @@ export default class extends Phaser.State {
   }
   
   getClientTime() {
-    return this.game.time.time & 0xffffffff
+    return this.game.time.time - this.game.transport.start_time
   }
   
   createRoads() {
@@ -93,59 +93,50 @@ export default class extends Phaser.State {
     return shadow
   }
   
-  onMessage(evt) {
-    setTimeout(() => {
-      const message = decode(evt.data)
-      switch (message.type) {
-        case MessageType.JOIN_ROOM_RES:
-          const now = this.getClientTime()
-          this.latency = now - this.joinRoomStart
-          this.timeoffset = now - message.ts
-          for (let i = 0; i < message.entities.length; i++) {
-            const entity = message.entities[i]
-            const shadow = this.createShadow(entity)
-            if (entity.id == message.player_id) {
-              const player = this.createPlayer(entity)
-              this.player = player
-              this.shadow = shadow
-            }
+  onMessage(message) {
+    switch (message.type) {
+      case MessageType.JOIN_ROOM_RES:
+        for (let i = 0; i < message.entities.length; i++) {
+          const entity = message.entities[i]
+          const shadow = this.createShadow(entity)
+          if (entity.id == message.player_id) {
+            const player = this.createPlayer(entity)
+            this.player = player
+            this.shadow = shadow
           }
-          break
-        case MessageType.UPDATE_NTF:
-          const ts = message.ts
-          for (let i = 0, len = message.entities.length; i < len; i++) {
-            const entity = message.entities[i]
-            const shadow = this.shadows[entity.id]
-            if (!shadow) continue;
-            const {src, dst, offset} = entity
-            shadow.checkpoints.push({ts, src, dst, offset})
-            if (shadow.checkpoints.length > 128) {
-              shadow.checkpoints = shadow.checkpoints.slice(-128)
-            }
+        }
+        break
+      case MessageType.UPDATE_NTF:
+        const elapsed = message.elapsed
+        for (let i = 0, len = message.entities.length; i < len; i++) {
+          const entity = message.entities[i]
+          const shadow = this.shadows[entity.id]
+          if (!shadow) continue;
+          const {src, dst, offset} = entity
+          shadow.checkpoints.push({elapsed, src, dst, offset})
+          if (shadow.checkpoints.length > 128) {
+            shadow.checkpoints = shadow.checkpoints.slice(-128)
           }
-          //console.log(message.entities)
-          break
-        default:
-          
-      }
-    }, Latency.random())
+        }
+        //console.log(message.entities)
+        break
+      default:
+        
+    }
   }
   
   joinRoom() {
     const {JoinRoomReq} = Protocols
     const room_id = 0
-    const ts = this.game.time.time & 0xffffffff
-    const req = new JoinRoomReq({room_id, ts})
-    const message = new Message({type: MessageType.JOIN_ROOM_REQ, data: req.toArrayBuffer()})
-    this.game.transport.send(message.toArrayBuffer())
-    this.joinRoomStart = this.getClientTime()
+    const req = new JoinRoomReq({room_id})
+    this.game.transport.send(MessageType.JOIN_ROOM_REQ, req)
   }
   
   update() {
-    const lerp = 100
-    const now = (this.game.time.time & 0xffffffff) - lerp - this.timeoffset
+    const lerp = Latency.MIN + Latency.MAX
+    const now = this.getClientTime() - lerp
     
-    this.debugInfo.text = `fps: ${this.game.time.fps}`
+    this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`
     for (let id in this.players) {
       const player = this.players[id]
       const {x, y} = this.edge2xy(player.src, player.dst, player.offset)
@@ -155,20 +146,18 @@ export default class extends Phaser.State {
     for (let id in this.shadows) {
       const shadow = this.shadows[id]
       const checkpoints = shadow.checkpoints
-      console.log(`length = ${checkpoints.length}`)
       
       const fromIndex = checkpoints.findIndex((checkpoint) => {
-        return checkpoint.ts > now
+        return checkpoint.elapsed > now
       }) - 1
       if (fromIndex < 0) {
-        console.log('no start')
         continue
       }
       const from = checkpoints[fromIndex]
       const to = checkpoints[fromIndex + 1]
       const fromPos = this.edge2xy(from.src, from.dst, from.offset)
       const toPos = this.edge2xy(to.src, to.dst, to.offset)
-      const k = (now - from.ts) / (to.ts - from.ts)
+      const k = (now - from.elapsed) / (to.elapsed - from.elapsed)
       const x = fromPos.x + (toPos.x - fromPos.x) * k
       const y = fromPos.y + (toPos.y - fromPos.y) * k
       
