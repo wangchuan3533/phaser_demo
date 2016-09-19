@@ -10,6 +10,10 @@ decode(Bin) ->
       messages_pb:decode_joinroomreq(Data);
     #message{type = 'JOIN_ROOM_RES', data = Data} ->
       messages_pb:decode_joinroomres(Data);
+    #message{type = 'LEAVE_ROOM_REQ', data = Data} ->
+      messages_pb:decode_leaveroomreq(Data);
+    #message{type = 'LEAVE_ROOM_RES', data = Data} ->
+      messages_pb:decode_leaveroomres(Data);
     #message{type = 'CHECKPOINT_REQ', data = Data} ->
       messages_pb:decode_checkpointreq(Data);
     #message{type = 'CHECKPOINT_RES', data = Data} ->
@@ -27,6 +31,10 @@ encode(Msg) ->
       messages_pb:encode(#message{type = 'JOIN_ROOM_REQ', data = Encoded});
     #joinroomres{} ->
       messages_pb:encode(#message{type = 'JOIN_ROOM_RES', data = Encoded});
+    #leaveroomreq{} ->
+      messages_pb:encode(#message{type = 'LEAVE_ROOM_REQ', data = Encoded});
+    #leaveroomres{} ->
+      messages_pb:encode(#message{type = 'LEAVE_ROOM_RES', data = Encoded});
     #checkpointreq{} ->
       messages_pb:encode(#message{type = 'CHECKPOINT_REQ', data = Encoded});
     #checkpointres{} ->

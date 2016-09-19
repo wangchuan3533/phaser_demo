@@ -10,6 +10,7 @@ export default class WSTransport {
     }
     this.latency = 0
     this.start_time = 0
+    this.start_time_count = 0
     this.sendTime = {}
   }
   
@@ -43,16 +44,18 @@ export default class WSTransport {
         const latency = now - this.sendTime[message.id]
         this.latency = this.latency || latency
         this.latency = Math.floor(this.latency + (latency - this.latency) / 100)
-        this.start_time = now - message.elapsed - this.latency / 2
+        this.start_time = now - message.elapsed - latency / 2
+        this.start_time_count = 1
         delete this.sendTime[message.id]
       } else if (message.type == MessageType.JOIN_ROOM_RES && this.sendTime[0] > 0) {
         const now = Date.now()
         const latency = now - this.sendTime[0]
         this.latency = this.latency || latency
         this.latency = Math.floor(this.latency + (latency - this.latency) / 100)
-        this.start_time = now - message.elapsed - this.latency / 2
+        const start_time = now - message.elapsed - latency / 2
+        this.start_time_count += 1
+        this.start_time = this.start_time + (start_time - this.start_time) / this.start_time_count
         delete this.sendTime[0]
-        
       }
       
       for (let i = 0; i < this.cbs.message.length; i++) {

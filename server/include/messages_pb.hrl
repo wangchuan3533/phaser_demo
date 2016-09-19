@@ -8,6 +8,37 @@
 }).
 -endif.
 
+-ifndef(JOINROOMREQ_PB_H).
+-define(JOINROOMREQ_PB_H, true).
+-record(joinroomreq, {
+    room_id = erlang:error({required, room_id})
+}).
+-endif.
+
+-ifndef(JOINROOMRES_PB_H).
+-define(JOINROOMRES_PB_H, true).
+-record(joinroomres, {
+    room_id = erlang:error({required, room_id}),
+    player_id = erlang:error({required, player_id}),
+    entities = [],
+    elapsed = erlang:error({required, elapsed})
+}).
+-endif.
+
+-ifndef(LEAVEROOMREQ_PB_H).
+-define(LEAVEROOMREQ_PB_H, true).
+-record(leaveroomreq, {
+    
+}).
+-endif.
+
+-ifndef(LEAVEROOMRES_PB_H).
+-define(LEAVEROOMRES_PB_H, true).
+-record(leaveroomres, {
+    
+}).
+-endif.
+
 -ifndef(CHECKPOINTREQ_PB_H).
 -define(CHECKPOINTREQ_PB_H, true).
 -record(checkpointreq, {
@@ -25,23 +56,6 @@
 -record(checkpointres, {
     id = erlang:error({required, id}),
     ret = erlang:error({required, ret}),
-    elapsed = erlang:error({required, elapsed})
-}).
--endif.
-
--ifndef(JOINROOMREQ_PB_H).
--define(JOINROOMREQ_PB_H, true).
--record(joinroomreq, {
-    room_id = erlang:error({required, room_id})
-}).
--endif.
-
--ifndef(JOINROOMRES_PB_H).
--define(JOINROOMRES_PB_H, true).
--record(joinroomres, {
-    room_id = erlang:error({required, room_id}),
-    player_id = erlang:error({required, player_id}),
-    entities = [],
     elapsed = erlang:error({required, elapsed})
 }).
 -endif.

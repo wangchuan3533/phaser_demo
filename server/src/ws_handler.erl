@@ -40,6 +40,6 @@ websocket_info(Ntf = #updatentf{}, Req, State) ->
 websocket_info(_Info, Req, State) ->
   {ok, Req, State}.
 
-websocket_terminate(_Reason, _Req, _State) ->
+websocket_terminate(_Reason, _Req, #state{player = Player}) ->
   % TODO: kill player
-  ok.
+  ok = gen_server:call(Player, #leaveroomreq{}).

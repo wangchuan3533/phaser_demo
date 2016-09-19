@@ -2,8 +2,11 @@ enum MessageType {
   JOIN_ROOM_REQ = 1;
   JOIN_ROOM_RES = 2;
   
-  CHECKPOINT_REQ = 3;
-  CHECKPOINT_RES = 4;
+  LEAVE_ROOM_REQ = 3;
+  LEAVE_ROOM_RES = 4;
+  
+  CHECKPOINT_REQ = 5;
+  CHECKPOINT_RES = 6;
   
   UPDATE_NTF = 100;
 }
@@ -13,6 +16,23 @@ message Entity {
   required int32 src = 2;
   required int32 dst = 3;
   required uint32 offset = 4;
+}
+
+message JoinRoomReq {
+  required uint32 room_id = 1;
+}
+
+message JoinRoomRes {
+  required uint32 room_id = 1;
+  required uint32 player_id = 2;
+  repeated Entity entities = 3;
+  required uint32 elapsed = 4;
+}
+
+message LeaveRoomReq {
+}
+
+message LeaveRoomRes {
 }
 
 message CheckpointReq {
@@ -28,17 +48,6 @@ message CheckpointRes {
   required uint32 id = 1;
   required uint32 ret = 2;
   required uint32 elapsed = 3;
-}
-
-message JoinRoomReq {
-  required uint32 room_id = 1;
-}
-
-message JoinRoomRes {
-  required uint32 room_id = 1;
-  required uint32 player_id = 2;
-  repeated Entity entities = 3;
-  required uint32 elapsed = 4;
 }
 
 message UpdateNtf {
