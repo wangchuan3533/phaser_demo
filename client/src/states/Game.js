@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import Player from '../sprites/Player'
 import Shadow from '../sprites/Shadow'
-import {Direction, TILE_SIZE, Latency} from '../const'
+import {Direction, TILE_SIZE, Latency, TICK} from '../const'
 import TileMap from '../map/TileMap'
 import Graph from '../map/Graph'
 import {Message, MessageType, Protocols} from '../protocol'
@@ -133,7 +133,7 @@ export default class extends Phaser.State {
   }
   
   update() {
-    const lerp = Latency.MIN + Latency.MAX
+    const lerp = 2 * TICK + (this.game.transport.latency / 2)
     const now = this.getClientTime() - lerp
     
     this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`

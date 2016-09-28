@@ -43,3 +43,5 @@ export const Latency = {
     return this.MIN + Math.random() * (this.MAX - this.MIN)
   }
 }
+
+export const TICK = 60
