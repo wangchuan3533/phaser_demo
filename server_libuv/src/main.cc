@@ -34,6 +34,7 @@
 #include <uv.h>
 #include <lws_config.h>
 #include <libwebsockets.h>
+#include <unordered_map>
 
 int close_testing;
 int max_poll_elements;
@@ -47,7 +48,9 @@ const char *resource_path = LOCAL_RESOURCE_PATH;
 char crl_path[1024] = "";
 const char *http_response = "HTTP/1.1 200 OK\r\nServer: phaser_demo\r\nContent-Length: 5\r\n\r\nhello";
 char broadcast_message[128];
+static uint32_t uid_seed = 0;
 typedef struct session_data {
+    uint32_t uid;
     char nickname[64];
     struct lws *wsi;
     unsigned char recv_buf[1024];
@@ -55,6 +58,8 @@ typedef struct session_data {
     unsigned char send_buf[1024];
     unsigned int send_len;
 } session_data_t;
+
+std::unordered_map<uint32_t, session_data_t *> session_map;
 
 int callback_http(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)
 {
@@ -75,6 +80,8 @@ int callback_http(struct lws *wsi, enum lws_callback_reasons reason, void *user,
     case LWS_CALLBACK_ESTABLISHED:
         session->wsi = wsi;
         session->recv_len = 0;
+        session->uid = uid_seed++;
+        session_map[session->uid] = session;
         lwsl_notice("client connected\n");
         break;
     case LWS_CALLBACK_RECEIVE:
@@ -83,8 +90,10 @@ int callback_http(struct lws *wsi, enum lws_callback_reasons reason, void *user,
         session->recv_len = len;
         session->recv_buf[len] = '\0';
         snprintf(broadcast_message, sizeof(broadcast_message), "%s:%s", session->nickname, (char *)session->recv_buf);
-        lws_callback_on_writable_all_protocol(context, lws_get_protocol(wsi));
-        lws_callback_on_writable(wsi);
+        //lws_callback_on_writable_all_protocol(context, lws_get_protocol(wsi));
+        for (const auto& n : session_map) {
+            lws_callback_on_writable(n.second->wsi);
+        }
         break;
     case LWS_CALLBACK_SERVER_WRITEABLE:
         lwsl_notice("writable\n");

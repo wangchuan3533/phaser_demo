@@ -1,5 +1,5 @@
 CC = c++
-CFLAGS = -I../dep/include -g
+CFLAGS = -I../dep/include -g -std=c++11
 LDFLAGS = -L../dep/lib -lz -lxml2 -ltmx -luv -lwebsockets -lssl -lcrypto -lprotobuf
 SOURCES = tile_map.cc
 
