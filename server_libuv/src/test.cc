@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "common.h"
 #include "tile_map.h"
+#include "messages.pb.h"
 #define TEST_TMX_FILE_NAME "../data/8.tmx"
 #define TEST_TILE_MAP_FILE_NAME "../data/8.data"
 int test_tile_map()
@@ -66,8 +67,30 @@ int test_tile_map()
     return 0;
 }
 
+int test_protobuf()
+{
+    JoinRoomReq req;
+    req.set_room_id(1);
+    
+    int size = req.ByteSize();
+    void *buf = malloc(size);
+    if (!req.SerializeToArray(buf, size)) {
+        fprintf(stderr, "SerializeToArray failed\n");
+        exit(1);
+    }
+    
+    if (!req.ParseFromArray(buf, size)) {
+        fprintf(stderr, "ParseFromArray failed\n");
+        exit(1);
+    }
+    
+    free(buf);
+    return 0;
+}
+
 int main()
 {
     test_tile_map();
+    test_protobuf();
     return 0;
 }
