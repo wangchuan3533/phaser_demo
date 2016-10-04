@@ -24,6 +24,7 @@
     "webpack": "^1.13.1"
   },
   "dependencies": {
+    "long": "^3.2.0",
     "phaser": "^2.6.1",
     "protobufjs": "^5.0.1",
     "uppercamelcase": "^1.1.0"

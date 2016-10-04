@@ -1,0 +1,3 @@
+*.o
+src/server
+src/test

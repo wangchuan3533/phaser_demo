@@ -1,84 +1,73 @@
+import {Direction, TILE_SHIFT_BITS} from '../const'
+const VERTEX_SIZE = 6
+const EDGE_SIZE = 4
+const ROUTE_NODE_SIZE = 2
+
 export default class TileMap {
   constructor(data) {
     const uint32array = new Uint32Array(data)
-    this.width = uint32array[0]
-    this.height = uint32array[1]
-    this.numNodes = uint32array[2]
-    this.nodeIdMap = {}
-    for (let i = 0; i < this.numNodes; i++) {
-      this.nodeIdMap[uint32array[i + 3]] = i
+    let offset = 0
+    
+    this.width = uint32array[offset++]
+    this.height = uint32array[offset++]
+    
+    this.n_vertices = uint32array[offset++]
+    this.vertices = uint32array.slice(offset, offset + VERTEX_SIZE * this.n_vertices)
+    offset += VERTEX_SIZE * this.n_vertices
+    
+    this.n_edges = uint32array[offset++]
+    this.edges = uint32array.slice(offset, offset + EDGE_SIZE * this.n_edges)
+    offset += EDGE_SIZE * this.n_edges
+    
+    this.route_table = uint32array.slice(offset)
+  }
+  
+  getVertex(index) {
+    let offset = index * VERTEX_SIZE
+    const x = this.vertices[offset++]
+    const y = this.vertices[offset++]
+    const idx_out_edges = new Int32Array(this.vertices.slice(offset, offset + 4).buffer)
+    
+    return {x, y, idx_out_edges}
+  }
+  
+  getEdge(index) {
+    let offset = index * EDGE_SIZE
+    const src = this.edges[offset++]
+    const dst = this.edges[offset++]
+    const direction = this.edges[offset++]
+    const length = this.edges[offset++]
+    
+    return {src, dst, direction, length}
+  }
+  
+  getRouteNode(index) {
+    let offset = index * ROUTE_NODE_SIZE
+    const distance = this.route_table[offset++]
+    const next = this.route_table[offset++]
+    return {distance, next}
+  }
+  
+  pos_to_xy(index, offset) {
+    const edge = this.getEdge(index)
+    const vertex = this.getVertex(edge.src)
+    let x = vertex.x
+    let y = vertex.y
+    switch (edge.direction) {
+      case Direction.DIRECTION_UP:
+        y -= offset / (1 << TILE_SHIFT_BITS)
+        break
+      case Direction.DIRECTION_DOWN:
+        y += offset / (1 << TILE_SHIFT_BITS)
+        break
+      case Direction.DIRECTION_LEFT:
+        x -= offset / (1 << TILE_SHIFT_BITS)
+        break
+      case Direction.DIRECTION_RIGHT:
+        x += offset / (1 << TILE_SHIFT_BITS)
+        break
     }
-    
-    this.directions = new Uint8Array(uint32array.slice(this.numNodes + 3).buffer)
-  }
-  
-  isWall(x, y) {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-      return true
-    }
-    
-    const index = y * this.width + x
-    return this.nodeIdMap[index] == null
-  }
-  
-  isRoad(x, y) {
-    return !this.isWall(x, y)
-  }
-  
-  xy2index(x, y) {
-    return this.width * y + x;
-  }
-
-  index2xy(index) {
-    const x = index % this.width;
-    const y = Math.floor(index / this.width);
-    return {x, y};
-  }
-  
-  edge2xy(src, dst, offset) {
-    const p1 = this.index2xy(src)
-    if (dst < 0) return p1
-    const p2 = this.index2xy(dst)
-    const dx = p2.x - p1.x
-    const dy = p2.y - p1.y
-    const delta = Math.min(offset, this.edgeDistance(src, dst)) / 0x10000
-    
-    let {x, y} = p1
-    if (dx > 0) {
-      x += delta
-    } else if (dx < 0) {
-      x -= delta
-    } else if (dy > 0) {
-      y += delta
-    } else if (dy < 0) {
-      y -= delta
-    }
-    
     return {x, y}
   }
   
-  edgeDistance(src, dst) {
-    const p1 = this.index2xy(src)
-    const p2 = this.index2xy(dst)
-    const dx = p2.x - p1.x
-    const dy = p2.y - p1.y
-    
-    return 0x10000 * Math.floor((Math.abs(dx) + Math.abs(dy)))
-  }
-  
-  lookup(index1, index2) {
-    const node1 = this.nodeIdMap[index1]
-    const node2 = this.nodeIdMap[index2]
-    
-    if (node1 >= 0 && node2 >= 0) {
-      return this.directions[node1 * this.numNodes + node2]
-    }
-    return false
-  }
-  
-  randomPosition() {
-    const nodeId = Math.floor(this.numNodes * Math.random())
-    const index = Object.keys(this.nodeIdMap)[nodeId]
-    return this.index2xy(index)
-  }
 }

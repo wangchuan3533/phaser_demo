@@ -5,17 +5,19 @@ enum MessageType {
   LEAVE_ROOM_REQ = 3;
   LEAVE_ROOM_RES = 4;
   
-  CHECKPOINT_REQ = 5;
-  CHECKPOINT_RES = 6;
+  ACTION_REQ = 5;
+  ACTION_RES = 6;
+  
+  TIME_SYNC_REQ = 7;
+  TIME_SYNC_RES = 8;
   
   UPDATE_NTF = 100;
 }
 
 message Entity {
   required uint32 id = 1;
-  required int32 src = 2;
-  required int32 dst = 3;
-  required uint32 offset = 4;
+  required uint32 index = 2;
+  required uint32 offset = 3;
 }
 
 message JoinRoomReq {
@@ -23,31 +25,43 @@ message JoinRoomReq {
 }
 
 message JoinRoomRes {
-  required uint32 room_id = 1;
-  required uint32 player_id = 2;
-  repeated Entity entities = 3;
-  required uint32 elapsed = 4;
+  required int32 ret = 1;
+  optional uint32 room_id = 2;
+  optional uint32 player_id = 3;
+  repeated Entity entities = 4;
+  optional uint32 elapsed = 5;
+  required uint64 start_time = 6;
 }
 
 message LeaveRoomReq {
 }
 
 message LeaveRoomRes {
+  required int32 ret = 1;
 }
 
-message CheckpointReq {
+message ActionReq {
   required uint32 id = 1;
-  required int32 src = 2;
-  required int32 dst = 3;
+  required int32  direction = 2;
+  required uint32 index = 3;
   required uint32 offset = 4;
   required uint32 elapsed = 5;
-  required uint32 latency = 6;
 }
 
-message CheckpointRes {
-  required uint32 id = 1;
-  required uint32 ret = 2;
+message ActionRes {
+  required int32 ret = 1;
+  required uint32 id = 2;
   required uint32 elapsed = 3;
+}
+
+message TimeSyncReq {
+  required uint64 client_send_time = 1;
+}
+
+message TimeSyncRes {
+  required uint64 client_send_time = 1;
+  required uint64 server_recv_time = 2;
+  required uint64 server_send_time = 3;
 }
 
 message UpdateNtf {

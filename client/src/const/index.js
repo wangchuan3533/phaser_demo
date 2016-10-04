@@ -1,44 +1,38 @@
 export const TILE_SIZE = 20
+export const TileType = {
+  TILE_TYPE_WALL: 0,
+  TILE_TYPE_ROAD: 1
+}
+export const TILE_SHIFT_BITS = 10
 export const Direction = {
-  LEFT: 1,
-  RIGHT: 2,
-  UP: 3,
-  DOWN: 4,
-  
-  direction2vector: function (direction) {
-    switch (direction) {
-      case this.LEFT:
-        return {x: -1, y: 0}
-      case this.RIGHT:
-        return {x: 1, y: 0}
-      case this.UP:
-        return {x: 0, y: -1}
-      case this.DOWN:
-        return {x: 0, y: 1}
-      default:
-        return {x: 0, y: 0}
-    }
-  },
+  DIRECTION_RIGHT: 0,
+  DIRECTION_DOWN:  1,
+  DIRECTION_LEFT:  2,
+  DIRECTION_UP:    3,
   
   opposite: function (direction) {
     switch (direction) {
-      case this.LEFT:
-        return this.RIGHT
-      case this.RIGHT:
-        return this.LEFT
-      case this.UP:
-        return this.DOWN
-      case this.DOWN:
-        return this.UP
+      case this.DIRECTION_LEFT:
+        return this.DIRECTION_RIGHT
+      case this.DIRECTION_RIGHT:
+        return this.DIRECTION_LEFT
+      case this.DIRECTION_UP:
+        return this.DIRECTION_DOWN
+      case this.DIRECTION_DOWN:
+        return this.DIRECTION_UP
       default:
-        return -1
+        throw 'invalid direction' + direction
     }
+  },
+  
+  valid: function (direction) {
+    return direction == 0 || direction == 1 || direction == 2 || direction == 3
   }
 }
 
 export const Latency = {
-  MIN: 150,
-  MAX: 150,
+  MIN: 100,
+  MAX: 100,
   random: function() {
     return this.MIN + Math.random() * (this.MAX - this.MIN)
   }

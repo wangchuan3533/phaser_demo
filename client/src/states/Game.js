@@ -3,7 +3,6 @@ import Player from '../sprites/Player'
 import Shadow from '../sprites/Shadow'
 import {Direction, TILE_SIZE, Latency, TICK} from '../const'
 import TileMap from '../map/TileMap'
-import Graph from '../map/Graph'
 import {Message, MessageType, Protocols} from '../protocol'
 
 export default class extends Phaser.State {
@@ -15,10 +14,8 @@ export default class extends Phaser.State {
 
   create() {
     // prepare
-    const path = this.cache.getBinary('path')
-    this.map = new TileMap(path)
-    const edge = this.cache.getBinary('edge')
-    this.graph = new Graph(edge)
+    const tile_map = this.cache.getBinary('tile_map')
+    this.map = new TileMap(tile_map)
     
     // create roads
     this.createRoads()
@@ -26,17 +23,14 @@ export default class extends Phaser.State {
     // cursors
     this.cursors = this.game.input.keyboard.createCursorKeys()
     
+    // sync time
+    this.syncTime()
+    
     // join room
     this.joinRoom()
     
     // regiester protocol
     this.game.transport.register('message', this.onMessage.bind(this))
-    
-    // global functions
-    this.edge2xy = (src, dst, offset) => {
-      const {x, y} = this.map.edge2xy(src, dst, offset)
-      return {x: (x + 0.5) * TILE_SIZE, y: (y + 0.5) * TILE_SIZE}
-    }
     
     // debug info
     this.game.time.advancedTiming = true
@@ -54,13 +48,18 @@ export default class extends Phaser.State {
     const graphics = this.add.graphics(0, 0)
     
     // draw roads
-    graphics.lineStyle(1, 0xafafaf, 1)
+    graphics.lineStyle(2, 0xa0a000, 0.5)
     graphics.beginFill(0xafafaf, 1)
     
-    for (let index in this.map.nodeIdMap) {
-      const {x, y} = this.map.index2xy(index)
-      const extra = TILE_SIZE >> 1
-      graphics.drawRect(x * TILE_SIZE + border - extra, y * TILE_SIZE + border - extra, TILE_SIZE - 2 * border + 2 * extra, TILE_SIZE - 2 * border + 2 * extra)
+    for (let i = 0; i < this.map.n_edges; i++) {
+      const edge = this.map.getEdge(i);
+      const src = this.map.getVertex(edge.src)
+      const dst = this.map.getVertex(edge.dst)
+      graphics.moveTo(src.x * TILE_SIZE, src.y * TILE_SIZE)
+      graphics.lineTo(dst.x * TILE_SIZE, dst.y * TILE_SIZE)
+      if (edge.direction == Direction.DIRECTION_RIGHT || edge.direction == Direction.DIRECTION_DOWN) {
+        this.add.text((src.x + dst.x) / 2 * TILE_SIZE, (src.y + dst.y) / 2 * TILE_SIZE, i, {font: '10px', fill: '#eeeeee'})
+      }
     }
     
     graphics.endFill()
@@ -71,8 +70,7 @@ export default class extends Phaser.State {
     const player = new Player({
       ...opts,
       game: this.game,
-      map: this.map,
-      graph: this.graph,
+      map: this.map
     })
     
     this.game.add.existing(player)
@@ -84,8 +82,7 @@ export default class extends Phaser.State {
     const shadow = new Shadow({
       ...opts,
       game: this.game,
-      map: this.map,
-      graph: this.graph,
+      map: this.map
     })
     
     this.game.add.existing(shadow)
@@ -95,7 +92,15 @@ export default class extends Phaser.State {
   
   onMessage(message) {
     switch (message.type) {
+      case MessageType.TIME_SYNC_RES:
+        const client_recv_time = Date.now()
+        const offset = ((message.server_recv_time - message.client_send_time) + (message.server_send_time - client_recv_time)) / 2
+        const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_send_time)
+        this.game.transport.offset = offset
+        this.game.transport.latency = round_trip_time
+        break;
       case MessageType.JOIN_ROOM_RES:
+        this.game.transport.start_time = message.start_time
         for (let i = 0; i < message.entities.length; i++) {
           const entity = message.entities[i]
           const shadow = this.createShadow(entity)
@@ -112,8 +117,11 @@ export default class extends Phaser.State {
           const entity = message.entities[i]
           const shadow = this.shadows[entity.id]
           if (!shadow) continue;
-          const {src, dst, offset} = entity
-          shadow.checkpoints.push({elapsed, src, dst, offset})
+          shadow.index = entity.index
+          shadow.offset = entity.offset
+          
+          const {index, offset} = entity
+          shadow.checkpoints.push({elapsed, index, offset})
           if (shadow.checkpoints.length > 128) {
             shadow.checkpoints = shadow.checkpoints.slice(-128)
           }
@@ -132,19 +140,36 @@ export default class extends Phaser.State {
     this.game.transport.send(MessageType.JOIN_ROOM_REQ, req)
   }
   
+  syncTime() {
+    const {TimeSyncReq} = Protocols
+    const client_send_time = Date.now()
+    const req = new TimeSyncReq({client_send_time})
+    this.game.transport.send(MessageType.TIME_SYNC_REQ, req)
+  }
+  
   update() {
     const lerp = 2 * TICK + (this.game.transport.latency / 2)
     const now = this.getClientTime() - lerp
     
     this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`
+    
     for (let id in this.players) {
       const player = this.players[id]
-      const {x, y} = this.edge2xy(player.src, player.dst, player.offset)
-      player.x = x
-      player.y = y
+      const {x, y} = this.map.pos_to_xy(player.index, player.offset)
+      player.x = x * TILE_SIZE
+      player.y = y * TILE_SIZE
     }
+    
     for (let id in this.shadows) {
-      const shadow = this.shadows[id]
+      {
+        const shadow = this.shadows[id]
+        const {x, y} = this.map.pos_to_xy(shadow.index, shadow.offset)
+        shadow.x = x * TILE_SIZE
+        shadow.y = y * TILE_SIZE
+      }
+      continue
+      
+      
       const checkpoints = shadow.checkpoints
       
       const fromIndex = checkpoints.findIndex((checkpoint) => {
@@ -173,13 +198,13 @@ export default class extends Phaser.State {
     if (!player) return
     
     if (cursors.left.isDown) {
-      player.move(Direction.LEFT)
+      player.move(Direction.DIRECTION_LEFT)
     } else if (cursors.right.isDown) {
-      player.move(Direction.RIGHT)
+      player.move(Direction.DIRECTION_RIGHT)
     } else if (cursors.up.isDown) {
-      player.move(Direction.UP)
+      player.move(Direction.DIRECTION_UP)
     } else if (cursors.down.isDown) {
-      player.move(Direction.DOWN)
+      player.move(Direction.DIRECTION_DOWN)
     }
   }
 }
