@@ -184,5 +184,6 @@ void server::run()
     } catch (const std::exception &e) {
         std::cout << e.what() << std::endl;
         _svr.stop();
+        if (_svr.is_listening()) _svr.stop_listening();
     }
 }
