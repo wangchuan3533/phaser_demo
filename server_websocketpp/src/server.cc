@@ -185,5 +185,9 @@ void server::run()
         std::cout << e.what() << std::endl;
         _svr.stop();
         if (_svr.is_listening()) _svr.stop_listening();
+        
+        for (auto & it : _sessions) {
+            _svr.close(it.first, websocketpp::close::status::normal, "close");
+        }
     }
 }

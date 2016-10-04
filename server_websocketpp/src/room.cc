@@ -89,7 +89,7 @@ bool room::update()
             
             if (action_req->index() == p->_index) {
                 p->_direction = action_req->direction();
-            } else if (action_req->index() == p->_old_routes.back()){
+            } else if (!p->_old_routes.empty() && action_req->index() == p->_old_routes.back()){
                 // TODO check
                 edge_t *old_edge = _tile_map->get_edge(action_req->index());
                 p->_index = action_req->index();
