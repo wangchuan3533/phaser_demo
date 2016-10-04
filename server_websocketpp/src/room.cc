@@ -55,7 +55,7 @@ bool room::player_leave(session *s)
 bool room::player_action(uint32_t player_id, action_req_ptr action_req, action_res_ptr action_res)
 {
     player *p = _players[player_id];
-    uint32_t latency = _elapsed - action_req->elapsed();
+    int32_t latency = ((int32_t)_elapsed) - ((int32_t)action_req->elapsed());
     if (latency > p->_max_latency) p->_max_latency = latency;
     _actions_queues[player_id].push_back(action_req);
     std::cout << "[latency] " << latency << std::endl;
@@ -85,7 +85,7 @@ bool room::update()
         action_queue &q = _actions_queues[player_id];
         while (!q.empty()) {
             action_req_ptr action_req = q.front();
-            if (_elapsed - action_req->elapsed() < p->_max_latency + 20) break;
+            if (((int32_t)_elapsed) - ((int32_t)action_req->elapsed()) < p->_max_latency + 20) break;
             
             if (action_req->index() == p->_index) {
                 p->_direction = action_req->direction();

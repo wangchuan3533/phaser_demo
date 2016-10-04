@@ -40,7 +40,7 @@ export default class extends Phaser.State {
   }
   
   getClientTime() {
-    return this.game.time.time - this.game.transport.start_time
+    return Date.now() + this.game.transport.offset - this.game.transport.start_time
   }
   
   createRoads() {
@@ -117,8 +117,6 @@ export default class extends Phaser.State {
           const entity = message.entities[i]
           const shadow = this.shadows[entity.id]
           if (!shadow) continue;
-          shadow.index = entity.index
-          shadow.offset = entity.offset
           
           const {index, offset} = entity
           shadow.checkpoints.push({elapsed, index, offset})
@@ -148,7 +146,7 @@ export default class extends Phaser.State {
   }
   
   update() {
-    const lerp = 2 * TICK + (this.game.transport.latency / 2)
+    const lerp = this.game.transport.latency * 1.2
     const now = this.getClientTime() - lerp
     
     this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`
@@ -161,17 +159,8 @@ export default class extends Phaser.State {
     }
     
     for (let id in this.shadows) {
-      {
-        const shadow = this.shadows[id]
-        const {x, y} = this.map.pos_to_xy(shadow.index, shadow.offset)
-        shadow.x = x * TILE_SIZE
-        shadow.y = y * TILE_SIZE
-      }
-      continue
-      
-      
+      const shadow = this.shadows[id]
       const checkpoints = shadow.checkpoints
-      
       const fromIndex = checkpoints.findIndex((checkpoint) => {
         return checkpoint.elapsed > now
       }) - 1
@@ -180,14 +169,13 @@ export default class extends Phaser.State {
       }
       const from = checkpoints[fromIndex]
       const to = checkpoints[fromIndex + 1]
-      const fromPos = this.edge2xy(from.src, from.dst, from.offset)
-      const toPos = this.edge2xy(to.src, to.dst, to.offset)
+      const fromPos = this.map.pos_to_xy(from.index, from.offset)
+      const toPos = this.map.pos_to_xy(to.index, to.offset)
       const k = (now - from.elapsed) / (to.elapsed - from.elapsed)
       const x = fromPos.x + (toPos.x - fromPos.x) * k
       const y = fromPos.y + (toPos.y - fromPos.y) * k
-      
-      shadow.x = x
-      shadow.y = y
+      shadow.x = x * TILE_SIZE
+      shadow.y = y * TILE_SIZE
       shadow.checkpoints = checkpoints.slice(fromIndex)
     }
   }

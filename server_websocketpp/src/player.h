@@ -41,7 +41,7 @@ private:
     uint32_t _index;
     uint32_t _offset;
     int32_t _direction;
-    uint32_t _max_latency;
+    int32_t _max_latency;
     std::queue<uint32_t> _old_routes;
     friend class room;
 };
