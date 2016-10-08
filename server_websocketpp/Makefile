@@ -7,7 +7,7 @@ SOURCES = src/tile_map.cc src/main.cc
 all: server test
 
 clean:
-	rm -rf server test src/*.o src/message.pb.h src/messages.pb.cc
+	rm -rf server test src/*.o src/messages.pb.h src/messages.pb.cc
 
 server: src/main.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/player.o
 	${CC} -o $@ $^ ${LDFLAGS}
@@ -15,7 +15,11 @@ server: src/main.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/
 test: src/test.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/session.o src/player.o
 	${CC} -o $@ $^ ${LDFLAGS}
 
-src/%.o: src/%.cc
-	${CC} -o $@ ${CFLAGS} -c $^
+src/%.o: src/%.cc src/messages.pb.h
+	${CC} -o $@ ${CFLAGS} -c $<
+
 src/messages.pb.cc: proto/messages.proto
+	${PROTOC} --proto_path=proto --cpp_out=src $^
+
+src/messages.pb.h: proto/messages.proto
 	${PROTOC} --proto_path=proto --cpp_out=src $^
