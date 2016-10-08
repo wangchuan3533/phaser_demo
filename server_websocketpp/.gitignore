@@ -2,3 +2,5 @@
 server
 test
 dep
+src/messages.pb.h
+src/messages.pb.cc
