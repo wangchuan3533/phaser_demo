@@ -1,0 +1,6 @@
+[submodule "server_websocketpp/dep/tmx"]
+	path = server_websocketpp/dep/tmx
+	url = https://github.com/baylej/tmx
+[submodule "websocketpp"]
+	path = server_websocketpp/dep/websocketpp
+	url = https://github.com/zaphoyd/websocketpp

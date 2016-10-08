@@ -16,9 +16,10 @@ export default class WSTransport {
   
   connect() {
     //const ws = new WebSocket('ws://192.168.31.210:8888/ws')
-    const ws = new WebSocket('ws://127.0.0.1:9002/ws')
+    //const ws = new WebSocket('ws://127.0.0.1:9002/ws')
     //const ws = new WebSocket('ws://192.168.31.210:9002/ws')
     //const ws = new WebSocket('ws://monster-io-sin.tuanguwen.com:9002/ws')
+    const ws = new WebSocket('ws:/ec2-54-175-246-94.compute-1.amazonaws.com:9002/ws')
     ws.binaryType = 'arraybuffer'
     ws.onopen = this.opencb.bind(this)
     ws.onclose = this.closecb.bind(this)

@@ -146,7 +146,7 @@ export default class extends Phaser.State {
   }
   
   update() {
-    const lerp = this.game.transport.latency * 1.2
+    const lerp = this.game.transport.latency * 2
     const now = this.getClientTime() - lerp
     
     this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`
@@ -165,10 +165,15 @@ export default class extends Phaser.State {
         return checkpoint.elapsed > now
       }) - 1
       if (fromIndex < 0) {
+        console.log('no from')
         continue
       }
       const from = checkpoints[fromIndex]
       const to = checkpoints[fromIndex + 1]
+      if (!to) {
+        console.log('no to')
+        continue
+      }
       const fromPos = this.map.pos_to_xy(from.index, from.offset)
       const toPos = this.map.pos_to_xy(to.index, to.offset)
       const k = (now - from.elapsed) / (to.elapsed - from.elapsed)
@@ -176,6 +181,7 @@ export default class extends Phaser.State {
       const y = fromPos.y + (toPos.y - fromPos.y) * k
       shadow.x = x * TILE_SIZE
       shadow.y = y * TILE_SIZE
+      //console.log({fromIndex, length: checkpoints.length})
       shadow.checkpoints = checkpoints.slice(fromIndex)
     }
   }

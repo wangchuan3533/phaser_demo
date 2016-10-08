@@ -1,3 +1,4 @@
 *.o
-src/server
-src/test
+server
+test
+dep
