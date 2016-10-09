@@ -17,9 +17,10 @@ export default class WSTransport {
   connect() {
     //const ws = new WebSocket('ws://192.168.31.210:8888/ws')
     //const ws = new WebSocket('ws://127.0.0.1:9002/ws')
+    const ws = new WebSocket('ws://123.57.55.85:9002/ws')
     //const ws = new WebSocket('ws://192.168.31.210:9002/ws')
     //const ws = new WebSocket('ws://monster-io-sin.tuanguwen.com:9002/ws')
-    const ws = new WebSocket('ws:/ec2-54-175-246-94.compute-1.amazonaws.com:9002/ws')
+    //const ws = new WebSocket('ws://ec2-54-175-246-94.compute-1.amazonaws.com:9002/ws')
     ws.binaryType = 'arraybuffer'
     ws.onopen = this.opencb.bind(this)
     ws.onclose = this.closecb.bind(this)
@@ -40,12 +41,12 @@ export default class WSTransport {
   }
   
   messsagecb(evt) {
-    setTimeout(() => {
+    //setTimeout(() => {
       const message = decode(evt.data)
       for (let i = 0; i < this.cbs.message.length; i++) {
         this.cbs.message[i](message)
       }
-    }, Latency.random())
+    //}, Latency.random())
   }
   
   register(type, cb) {
@@ -53,10 +54,10 @@ export default class WSTransport {
   }
   
   send(type, msg) {
-    setTimeout(() => {
+    //setTimeout(() => {
       const data = msg.toArrayBuffer()
       const message = new Message({type, data})
       this.ws.send(message.toArrayBuffer())
-    }, Latency.random())
+    //}, Latency.random())
   }
 }

@@ -25,6 +25,9 @@ export default class extends Phaser.State {
     
     // sync time
     this.syncTime()
+    setInterval(() => {
+      this.syncTime()
+    }, 1000)
     
     // join room
     this.joinRoom()
@@ -34,7 +37,7 @@ export default class extends Phaser.State {
     
     // debug info
     this.game.time.advancedTiming = true
-    const debugInfo = this.add.text(this.world.width - 128, 32, 'debug info', { font: '16px Arial', fill: '#eeeeee', align: 'center' })
+    const debugInfo = this.add.text(this.world.width - 128, 52, 'debug info', { font: '16px Arial', fill: '#eeeeee', align: 'center' })
     debugInfo.anchor.setTo(0.5, 0.5)
     this.debugInfo = debugInfo
   }
@@ -93,9 +96,10 @@ export default class extends Phaser.State {
   onMessage(message) {
     switch (message.type) {
       case MessageType.TIME_SYNC_RES:
+        console.log(message)
         const client_recv_time = Date.now()
         const offset = ((message.server_recv_time - message.client_send_time) + (message.server_send_time - client_recv_time)) / 2
-        const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_send_time)
+        const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_recv_time)
         this.game.transport.offset = offset
         this.game.transport.latency = round_trip_time
         break;
@@ -146,10 +150,10 @@ export default class extends Phaser.State {
   }
   
   update() {
-    const lerp = this.game.transport.latency * 2
+    const lerp = 40 + this.game.transport.latency * 2
     const now = this.getClientTime() - lerp
     
-    this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}`
+    this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}\noffset: ${this.game.transport.offset}`
     
     for (let id in this.players) {
       const player = this.players[id]

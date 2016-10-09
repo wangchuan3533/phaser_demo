@@ -9,6 +9,10 @@ all: server test
 clean:
 	rm -rf server test src/*.o src/messages.pb.h src/messages.pb.cc
 
+depend:
+	git submodule update --init --recursive
+	pushd dep/tmx && mkdir build && pushd build && cmake .. && make && popd && popd
+
 server: src/main.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/player.o
 	${CC} -o $@ $^ ${LDFLAGS}
 

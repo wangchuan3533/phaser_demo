@@ -32,7 +32,7 @@ inline int32_t opposite_direction(int32_t direction)
 #define TILE_TYPE_WALL 0
 
 #define TILE_SHIFT_BITS 10
-#define TICK_INTERVAL 10
+#define TICK_INTERVAL 50
 
 typedef websocketpp::connection_hdl connection_hdl;
 typedef websocketpp::server<websocketpp::config::asio> asio_server_t;
