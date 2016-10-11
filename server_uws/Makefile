@@ -1,7 +1,7 @@
 CC = c++
 PROTOC = protoc
-CFLAGS = -I../dep/tmx/src -I../dep/websocketpp -g -std=c++11 -Wall
-LDFLAGS = -L../dep/tmx/build -ltmx -lz -lxml2 -lprotobuf -lboost_system
+CFLAGS = -I../dep/tmx/src -I../dep/uWebSockets/src -g -std=c++11 -Wall
+LDFLAGS = -L../dep/tmx/build -ltmx -luWS -lz -lxml2 -luv -lprotobuf
 SOURCES = src/tile_map.cc src/main.cc
 
 all: server test
