@@ -6,7 +6,7 @@
 class player {
 public:
     player(room &room, session &session, uint32_t player_id, uint32_t index, uint32_t offset)
-    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _max_latency(0)
+    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _direction(-1), _max_latency(0)
     {
     }
     

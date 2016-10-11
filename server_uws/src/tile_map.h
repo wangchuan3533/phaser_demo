@@ -58,8 +58,7 @@ public:
     {
         position_t pos;
         pos.index = random() % _n_edges;
-        pos.offset = random() % _edges[pos.index].length;
-        pos.offset = _edges[pos.index].length;
+        pos.offset = 0;
         
         return pos;
     }

@@ -85,7 +85,7 @@ bool room::update()
         uint32_t player_id = it.first;
         player *p = _players[player_id];
         action_queue &q = _actions_queues[player_id];
-        while (!q.empty()) {
+        if (!q.empty()) {
             action_req_shared_ptr action_req = q.front();
             if (((int32_t)_elapsed) - ((int32_t)action_req->elapsed()) < p->_max_latency + 20) break;
             

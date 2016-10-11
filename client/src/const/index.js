@@ -31,8 +31,8 @@ export const Direction = {
 }
 
 export const Latency = {
-  MIN: 100,
-  MAX: 100,
+  MIN: 50,
+  MAX: 50,
   random: function() {
     return this.MIN + Math.random() * (this.MAX - this.MIN)
   }

@@ -54,7 +54,7 @@ export default class Player extends Entity {
   }
   
   move(direction) {
-    if (direction == this.direction) return
+    if (direction == this.direction || direction == this.edge.direction) return
     this.direction = direction
     this.sendAction()
   }
