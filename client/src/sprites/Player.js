@@ -66,8 +66,10 @@ export default class Player extends Entity {
     const direction = this.direction
     const index = this.index
     const offset = Math.floor(this.offset)
-    const req = new ActionReq({id, direction, index, offset, elapsed})
+    const action_req = new ActionReq({id, direction, index, offset, elapsed})
+    const type = MessageType.ACTION_REQ
+    const message = new Message({type, action_req})
     console.log({id, direction, index, offset, elapsed})
-    this.game.transport.send(MessageType.ACTION_REQ, req)
+    this.game.transport.send(message)
   }
 }

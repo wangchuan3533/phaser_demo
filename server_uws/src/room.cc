@@ -22,23 +22,23 @@ room::~room()
     delete _tile_map;
 }
 
-bool room::player_join(session *s, JoinRoomRes &join_room_res)
+bool room::player_join(session *s, JoinRoomRes *join_room_res)
 {
     uint32_t player_id = _player_id_seed++;
     position_t pos = _tile_map->random_position();
     _players[player_id] = new player(*this, *s, player_id, pos.index, pos.offset);
     for (auto & it : _players) {
-        Entity *entity = join_room_res.add_entities();
+        Entity *entity = join_room_res->add_entities();
         it.second->toEntity(entity);
     }
     s->set_room(this);
     s->set_player_id(player_id);
     
-    join_room_res.set_ret(0);
-    join_room_res.set_room_id(_room_id);
-    join_room_res.set_player_id(player_id);
-    join_room_res.set_elapsed(_elapsed);
-    join_room_res.set_start_time(_start_time);
+    join_room_res->set_ret(0);
+    join_room_res->set_room_id(_room_id);
+    join_room_res->set_player_id(player_id);
+    join_room_res->set_elapsed(_elapsed);
+    join_room_res->set_start_time(_start_time);
     return true;
 }
 
@@ -52,14 +52,16 @@ bool room::player_leave(session *s)
     return true;
 }
 
-bool room::player_action(uint32_t player_id, action_req_ptr action_req, action_res_ptr action_res)
+bool room::player_action(uint32_t player_id, action_req_shared_ptr action_req, ActionRes *action_res)
 {
+    uint64_t now = get_timestamp_millis();
+    uint32_t now_elapsed = now - _start_time;
     player *p = _players[player_id];
-    int32_t latency = ((int32_t)_elapsed) - ((int32_t)action_req->elapsed());
+    int32_t latency = ((int32_t)now_elapsed) - ((int32_t)action_req->elapsed());
     if (latency > p->_max_latency) p->_max_latency = latency;
     _actions_queues[player_id].push_back(action_req);
     std::cout << "[latency] " << latency << std::endl;
-    
+    std::cout << "[max_latency] " << p->_max_latency << std::endl;
     
     action_res->set_ret(0);
     action_res->set_id(0);
@@ -70,13 +72,13 @@ bool room::player_action(uint32_t player_id, action_req_ptr action_req, action_r
 bool room::update()
 {
     uint64_t now = get_timestamp_millis();
-    uint32_t new_elapsed = now - _start_time;
-    uint32_t delta_time = new_elapsed - _elapsed;
-    _elapsed = new_elapsed;
+    uint32_t now_elapsed = now - _start_time;
+    uint32_t delta_time = now_elapsed - _elapsed;
+    _elapsed = now_elapsed;
     
     Message msg;
-    UpdateNtf ntf;
-    ntf.set_elapsed(_elapsed);
+    UpdateNtf *ntf = msg.mutable_update_ntf();
+    ntf->set_elapsed(_elapsed);
     
     //std::cout << "room tick" << std::endl;
     for (auto & it : _players) {
@@ -84,7 +86,7 @@ bool room::update()
         player *p = _players[player_id];
         action_queue &q = _actions_queues[player_id];
         while (!q.empty()) {
-            action_req_ptr action_req = q.front();
+            action_req_shared_ptr action_req = q.front();
             if (((int32_t)_elapsed) - ((int32_t)action_req->elapsed()) < p->_max_latency + 20) break;
             
             if (action_req->index() == p->_index) {
@@ -127,12 +129,11 @@ bool room::update()
             }
         }
         
-        Entity *entity = ntf.add_entities();
+        Entity *entity = ntf->add_entities();
         p->toEntity(entity);
     }
     
     msg.set_type(UPDATE_NTF);
-    msg.set_data(ntf.SerializeAsString());
     std::string s;
     msg.SerializeToString(&s);
     

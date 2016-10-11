@@ -38,8 +38,7 @@ inline int32_t opposite_direction(int32_t direction)
 typedef uWS::WebSocket<uWS::SERVER> connection_t;
 typedef uWS::UpgradeInfo upgrade_info_t;
 typedef uWS::OpCode opcode_t;
-typedef std::shared_ptr<ActionReq> action_req_ptr;
-typedef std::shared_ptr<ActionRes> action_res_ptr;
+typedef std::shared_ptr<ActionReq> action_req_shared_ptr;
 
 class server;
 class session;

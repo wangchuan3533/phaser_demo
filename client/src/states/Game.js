@@ -96,7 +96,7 @@ export default class extends Phaser.State {
   onMessage(message) {
     switch (message.type) {
       case MessageType.TIME_SYNC_RES:
-        console.log(message)
+        message = message.time_sync_res
         const client_recv_time = Date.now()
         const offset = ((message.server_recv_time - message.client_send_time) + (message.server_send_time - client_recv_time)) / 2
         const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_recv_time)
@@ -104,6 +104,7 @@ export default class extends Phaser.State {
         this.game.transport.latency = round_trip_time
         break;
       case MessageType.JOIN_ROOM_RES:
+        message = message.join_room_res
         this.game.transport.start_time = message.start_time
         for (let i = 0; i < message.entities.length; i++) {
           const entity = message.entities[i]
@@ -116,6 +117,7 @@ export default class extends Phaser.State {
         }
         break
       case MessageType.UPDATE_NTF:
+        message = message.update_ntf
         const elapsed = message.elapsed
         for (let i = 0, len = message.entities.length; i < len; i++) {
           const entity = message.entities[i]
@@ -138,15 +140,19 @@ export default class extends Phaser.State {
   joinRoom() {
     const {JoinRoomReq} = Protocols
     const room_id = 0
-    const req = new JoinRoomReq({room_id})
-    this.game.transport.send(MessageType.JOIN_ROOM_REQ, req)
+    const join_room_req = new JoinRoomReq({room_id})
+    const type = MessageType.JOIN_ROOM_REQ
+    const message = new Message({type, join_room_req})
+    this.game.transport.send(message)
   }
   
   syncTime() {
     const {TimeSyncReq} = Protocols
     const client_send_time = Date.now()
-    const req = new TimeSyncReq({client_send_time})
-    this.game.transport.send(MessageType.TIME_SYNC_REQ, req)
+    const time_sync_req = new TimeSyncReq({client_send_time})
+    const type = MessageType.TIME_SYNC_REQ
+    const message = new Message({type, time_sync_req})
+    this.game.transport.send(message)
   }
   
   update() {

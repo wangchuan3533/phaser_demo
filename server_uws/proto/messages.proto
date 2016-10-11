@@ -1,17 +1,17 @@
 enum MessageType {
-  JOIN_ROOM_REQ = 1;
-  JOIN_ROOM_RES = 2;
-  
-  LEAVE_ROOM_REQ = 3;
-  LEAVE_ROOM_RES = 4;
-  
-  ACTION_REQ = 5;
-  ACTION_RES = 6;
-  
-  TIME_SYNC_REQ = 7;
-  TIME_SYNC_RES = 8;
-  
-  UPDATE_NTF = 100;
+  JOIN_ROOM_REQ = 10;
+  JOIN_ROOM_RES = 11;
+
+  LEAVE_ROOM_REQ = 12;
+  LEAVE_ROOM_RES = 13;
+
+  ACTION_REQ = 14;
+  ACTION_RES = 15;
+
+  TIME_SYNC_REQ = 16;
+  TIME_SYNC_RES = 17;
+
+  UPDATE_NTF = 18;
 }
 
 message Entity {
@@ -71,5 +71,18 @@ message UpdateNtf {
 
 message Message {
   required MessageType type = 1;
-  required bytes data = 2;
+
+  optional JoinRoomReq join_room_req = 10;
+  optional JoinRoomRes join_room_res = 11;
+
+  optional LeaveRoomReq leave_room_req = 12;
+  optional LeaveRoomRes leave_room_res = 13;
+
+  optional ActionReq action_req = 14;
+  optional ActionRes action_res = 15;
+
+  optional TimeSyncReq time_sync_req = 16;
+  optional TimeSyncRes time_sync_res = 17;
+
+  optional UpdateNtf update_ntf = 18;
 }

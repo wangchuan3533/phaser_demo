@@ -74,38 +74,34 @@ void server::on_message(connection_t conn, char *msg, size_t len, opcode_t opcod
     
     Message message_req;
     Message message_res;
+    JoinRoomRes *join_room_res;
+    ActionRes *action_res;
+    TimeSyncRes *time_sync_res;
+    action_req_shared_ptr action_req;
     
-    JoinRoomReq join_room_req;
-    JoinRoomRes join_room_res;
     uint32_t room_id;
     room *r;
     
-    action_req_ptr action_req;
-    action_res_ptr action_res;
-    
-    TimeSyncReq time_sync_req;
-    TimeSyncRes time_sync_res;
     
     message_req.ParseFromArray(msg, len);
     std::string tmp;
     
     switch (message_req.type()) {
     case JOIN_ROOM_REQ:
-        join_room_req.ParseFromString(message_req.data());
-        room_id = join_room_req.room_id();
+        room_id = message_req.join_room_req().room_id();
+        join_room_res = message_res.mutable_join_room_res();
         std::cout << "join room room_id " << room_id << std::endl;
         r = get_room(room_id);
         if (r) {
             if (!(r->player_join(it->second, join_room_res))) {
                 std::cerr << "join room failed" << std::endl;
-                join_room_res.set_ret(1);
+                join_room_res->set_ret(1);
             }
         } else {
-            join_room_res.set_ret(1);
+            join_room_res->set_ret(1);
         }
         
         message_res.set_type(JOIN_ROOM_RES);
-        message_res.set_data(join_room_res.SerializeAsString());
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         break;
@@ -117,23 +113,21 @@ void server::on_message(connection_t conn, char *msg, size_t len, opcode_t opcod
         }
         
         action_req = std::make_shared<ActionReq>();
-        action_req->ParseFromString(message_req.data());
-        action_res = std::make_shared<ActionRes>();
+        action_req->CopyFrom(message_req.action_req());
+        action_res = message_res.mutable_action_res();
         r->player_action(s->get_player_id(), action_req, action_res);
         
         message_res.set_type(ACTION_RES);
-        message_res.set_data(action_res->SerializeAsString());
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         
         break;
     case TIME_SYNC_REQ:
-        time_sync_req.ParseFromString(message_req.data());
-        time_sync_res.set_client_send_time(time_sync_req.client_send_time());
-        time_sync_res.set_server_recv_time(get_timestamp_millis());
-        time_sync_res.set_server_send_time(get_timestamp_millis());
+        time_sync_res = message_res.mutable_time_sync_res();
+        time_sync_res->set_client_send_time(message_req.time_sync_req().client_send_time());
+        time_sync_res->set_server_recv_time(get_timestamp_millis());
+        time_sync_res->set_server_send_time(get_timestamp_millis());
         message_res.set_type(TIME_SYNC_RES);
-        message_res.set_data(time_sync_res.SerializeAsString());
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         break;
@@ -154,8 +148,8 @@ void server::on_timer(uv_timer_t *timer)
 void server::broadcast(char *data, size_t len)
 {
     for (auto & it : _sessions) {
-        connection_t *conn = (connection_t *)&(it.first);
-        conn->send(data, len, opcode_t::TEXT);
+        connection_t conn = it.first;
+        conn.send(data, len, opcode_t::TEXT);
     }
 }
 

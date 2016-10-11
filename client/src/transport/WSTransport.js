@@ -41,23 +41,21 @@ export default class WSTransport {
   }
   
   messsagecb(evt) {
-    //setTimeout(() => {
+    setTimeout(() => {
       const message = decode(evt.data)
       for (let i = 0; i < this.cbs.message.length; i++) {
         this.cbs.message[i](message)
       }
-    //}, Latency.random())
+    }, Latency.random())
   }
   
   register(type, cb) {
     this.cbs[type] && this.cbs[type].push(cb)
   }
   
-  send(type, msg) {
-    //setTimeout(() => {
-      const data = msg.toArrayBuffer()
-      const message = new Message({type, data})
-      this.ws.send(message.toArrayBuffer())
-    //}, Latency.random())
+  send(msg) {
+    setTimeout(() => {
+      this.ws.send(msg.toArrayBuffer())
+    }, Latency.random())
   }
 }

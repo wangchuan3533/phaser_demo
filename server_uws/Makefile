@@ -12,6 +12,9 @@ clean:
 dep:
 	make -C ..
 
+protoc:
+	${PROTOC} --proto_path=proto --cpp_out=src proto/messages.proto
+
 server: src/main.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/player.o
 	${CC} -o $@ $^ ${LDFLAGS}
 

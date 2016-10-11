@@ -6,15 +6,15 @@
 #include "tile_map.h"
 
 class room {
-    typedef std::deque<action_req_ptr> action_queue;
+    typedef std::deque<action_req_shared_ptr> action_queue;
     
 public:
     room(uint32_t room_id);
     virtual ~room();
     
-    bool player_join(session *s, JoinRoomRes &join_room_res);
+    bool player_join(session *s, JoinRoomRes *join_room_res);
     bool player_leave(session *s);
-    bool player_action(uint32_t player_id, action_req_ptr action_req, action_res_ptr action_res);
+    bool player_action(uint32_t player_id, action_req_shared_ptr action_req, ActionRes *action_res);
     bool update();
 private:
     uint32_t _room_id;
