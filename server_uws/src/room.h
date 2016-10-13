@@ -12,9 +12,9 @@ public:
     room(uint32_t room_id);
     virtual ~room();
     
-    bool player_join(session *s, JoinRoomRes *join_room_res);
+    bool player_join(session *s, demo::protocol::JoinRoomRes *join_room_res);
     bool player_leave(session *s);
-    bool player_action(uint32_t player_id, action_req_shared_ptr action_req, ActionRes *action_res);
+    bool player_action(uint32_t player_id, action_req_shared_ptr action_req, demo::protocol::ActionRes *action_res);
     bool update();
 private:
     uint32_t _room_id;

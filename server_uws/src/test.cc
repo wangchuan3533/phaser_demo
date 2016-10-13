@@ -4,6 +4,7 @@
 #include "tile_map.h"
 #define TEST_TMX_FILE_NAME "data/8.tmx"
 #define TEST_TILE_MAP_FILE_NAME "data/8.data"
+#define TEST_TILE_MAP_FILE_NAME_PB "data/8.pb.data"
 int test_tile_map()
 {
     class tile_map tm;
@@ -22,14 +23,26 @@ int test_tile_map()
         exit(1);
     }
     
-    tm.clear_memory();
+    // save pb
+    ret = tm.save_as_pb(TEST_TILE_MAP_FILE_NAME_PB);
+    if (ret != true) {
+        fprintf(stderr, "save_as_pb failed\n");
+        exit(1);
+    }
     
+    tm.clear_memory();
     ret = tm.load(TEST_TILE_MAP_FILE_NAME);
     if (ret != true) {
         fprintf(stderr, "save_tile_map failed\n");
         exit(1);
     }
     
+    tm.clear_memory();
+    ret = tm.load_from_pb(TEST_TILE_MAP_FILE_NAME_PB);
+    if (ret != true) {
+        fprintf(stderr, "save_tile_map failed\n");
+        exit(1);
+    }
     /*
     for (i = 0; i < tm._n_vertices; i++) {
         printf("[vertex] index: %d, position: [%d, %d], edges: [%d, %d, %d, %d]\n",
@@ -72,7 +85,7 @@ int test_tile_map()
 
 int test_protobuf()
 {
-    JoinRoomReq req;
+    demo::protocol::JoinRoomReq req;
     req.set_room_id(1);
     
     int size = req.ByteSize();

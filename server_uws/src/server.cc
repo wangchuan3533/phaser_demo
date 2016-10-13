@@ -72,11 +72,11 @@ void server::on_message(connection_t conn, char *msg, size_t len, opcode_t opcod
     
     session *s = it->second;
     
-    Message message_req;
-    Message message_res;
-    JoinRoomRes *join_room_res;
-    ActionRes *action_res;
-    TimeSyncRes *time_sync_res;
+    demo::protocol::Message message_req;
+    demo::protocol::Message message_res;
+    demo::protocol::JoinRoomRes *join_room_res;
+    demo::protocol::ActionRes *action_res;
+    demo::protocol::TimeSyncRes *time_sync_res;
     action_req_shared_ptr action_req;
     
     uint32_t room_id;
@@ -87,7 +87,7 @@ void server::on_message(connection_t conn, char *msg, size_t len, opcode_t opcod
     std::string tmp;
     
     switch (message_req.type()) {
-    case JOIN_ROOM_REQ:
+    case demo::protocol::JOIN_ROOM_REQ:
         room_id = message_req.join_room_req().room_id();
         join_room_res = message_res.mutable_join_room_res();
         std::cout << "join room room_id " << room_id << std::endl;
@@ -101,33 +101,33 @@ void server::on_message(connection_t conn, char *msg, size_t len, opcode_t opcod
             join_room_res->set_ret(1);
         }
         
-        message_res.set_type(JOIN_ROOM_RES);
+        message_res.set_type(demo::protocol::JOIN_ROOM_RES);
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         break;
-    case ACTION_REQ:
+    case demo::protocol::ACTION_REQ:
         
         if (!(r = s->get_room())) {
             std::cerr << "action not in room" << std::endl;
             break;
         }
         
-        action_req = std::make_shared<ActionReq>();
+        action_req = std::make_shared<demo::protocol::ActionReq>();
         action_req->CopyFrom(message_req.action_req());
         action_res = message_res.mutable_action_res();
         r->player_action(s->get_player_id(), action_req, action_res);
         
-        message_res.set_type(ACTION_RES);
+        message_res.set_type(demo::protocol::ACTION_RES);
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         
         break;
-    case TIME_SYNC_REQ:
+    case demo::protocol::TIME_SYNC_REQ:
         time_sync_res = message_res.mutable_time_sync_res();
         time_sync_res->set_client_send_time(message_req.time_sync_req().client_send_time());
         time_sync_res->set_server_recv_time(get_timestamp_millis());
         time_sync_res->set_server_send_time(get_timestamp_millis());
-        message_res.set_type(TIME_SYNC_RES);
+        message_res.set_type(demo::protocol::TIME_SYNC_RES);
         message_res.SerializeToString(&tmp);
         conn.send(tmp.c_str(), tmp.size(), opcode_t::BINARY);
         break;

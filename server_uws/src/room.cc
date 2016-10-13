@@ -7,12 +7,14 @@ static const uint32_t speed = 6 << TILE_SHIFT_BITS;
 
 
 #define TILE_MAP_DATA_FILE "data/8.data"
+#define TILE_MAP_DATA_FILE_PB "data/8.pb.data"
 room::room(uint32_t room_id)
 : _room_id(room_id), _player_id_seed(0), _elapsed(0)
 {
     // TODO singleton tile_map
     _tile_map = new tile_map;
-    _tile_map->load(TILE_MAP_DATA_FILE);
+    _tile_map->load_from_pb(TILE_MAP_DATA_FILE_PB);
+    //_tile_map->load(TILE_MAP_DATA_FILE);
     
     _start_time = get_timestamp_millis();
 }
@@ -22,13 +24,13 @@ room::~room()
     delete _tile_map;
 }
 
-bool room::player_join(session *s, JoinRoomRes *join_room_res)
+bool room::player_join(session *s, demo::protocol::JoinRoomRes *join_room_res)
 {
     uint32_t player_id = _player_id_seed++;
     position_t pos = _tile_map->random_position();
     _players[player_id] = new player(*this, *s, player_id, pos.index, pos.offset);
     for (auto & it : _players) {
-        Entity *entity = join_room_res->add_entities();
+        demo::protocol::Entity *entity = join_room_res->add_entities();
         it.second->toEntity(entity);
     }
     s->set_room(this);
@@ -52,7 +54,7 @@ bool room::player_leave(session *s)
     return true;
 }
 
-bool room::player_action(uint32_t player_id, action_req_shared_ptr action_req, ActionRes *action_res)
+bool room::player_action(uint32_t player_id, action_req_shared_ptr action_req, demo::protocol::ActionRes *action_res)
 {
     uint64_t now = get_timestamp_millis();
     uint32_t now_elapsed = now - _start_time;
@@ -76,8 +78,8 @@ bool room::update()
     uint32_t delta_time = now_elapsed - _elapsed;
     _elapsed = now_elapsed;
     
-    Message msg;
-    UpdateNtf *ntf = msg.mutable_update_ntf();
+    demo::protocol::Message msg;
+    demo::protocol::UpdateNtf *ntf = msg.mutable_update_ntf();
     ntf->set_elapsed(_elapsed);
     
     //std::cout << "room tick" << std::endl;
@@ -87,7 +89,8 @@ bool room::update()
         action_queue &q = _actions_queues[player_id];
         if (!q.empty()) {
             action_req_shared_ptr action_req = q.front();
-            if (((int32_t)_elapsed) - ((int32_t)action_req->elapsed()) < p->_max_latency + 20) break;
+            uint32_t gap = ((int32_t)_elapsed) - ((int32_t)action_req->elapsed());
+            if (gap < p->_max_latency + 20) break;
             
             if (action_req->index() == p->_index) {
                 p->_direction = action_req->direction();
@@ -100,7 +103,8 @@ bool room::update()
             } else {
                 std::cout << "action:" << action_req->index() << "," << action_req->offset() << "," << action_req->direction() << "," << std::endl;
                 std::cout << "player:" << p->_index << "," << p->_offset << "," << p->_direction << "," << std::endl;
-                break;
+                continue;
+                //if (gap < p->_max_latency + 100) continue;
             }
             q.pop_front();
         }
@@ -129,11 +133,11 @@ bool room::update()
             }
         }
         
-        Entity *entity = ntf->add_entities();
+        demo::protocol::Entity *entity = ntf->add_entities();
         p->toEntity(entity);
     }
     
-    msg.set_type(UPDATE_NTF);
+    msg.set_type(demo::protocol::UPDATE_NTF);
     std::string s;
     msg.SerializeToString(&s);
     

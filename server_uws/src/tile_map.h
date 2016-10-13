@@ -50,6 +50,8 @@ class tile_map {
 public:
     bool load(const char *tile_map_file_name);
     bool save(const char *tile_map_file_name);
+    bool save_as_pb(const char *pb_file_name);
+    bool load_from_pb(const char *pb_file_name);
     bool load_from_tmx(const char *tmx_file_name);
     bool find_route(int src, int dst);
     void pos_to_xy(const position_t &pos, double &x, double &y);

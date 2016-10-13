@@ -4,6 +4,7 @@
 #include <tmx.h>
 #include "common.h"
 #include "tile_map.h"
+#include <fstream>
 
 #define PATH_LAYER_NAME "layer2"
 #define PROP_NAME "tileType"
@@ -258,6 +259,105 @@ bool tile_map::save(const char *tile_map_file_name)
     };
     
     fclose(output_fp);
+    return true;
+}
+
+bool tile_map::save_as_pb(const char *pb_file_name)
+{
+    demo::protocol::TileMap tm;
+    tm.set_width(_width);
+    tm.set_height(_height);
+    
+    // vertices
+    for (int i = 0; i < _n_vertices; i++) {
+        demo::protocol::Vertex *vertex = tm.add_vertices();
+        vertex->set_x(_vertices[i].x);
+        vertex->set_y(_vertices[i].y);
+        vertex->add_idx_out_edges(_vertices[i].idx_out_edges[0]);
+        vertex->add_idx_out_edges(_vertices[i].idx_out_edges[1]);
+        vertex->add_idx_out_edges(_vertices[i].idx_out_edges[2]);
+        vertex->add_idx_out_edges(_vertices[i].idx_out_edges[3]);
+    }
+    
+    // edges
+    for (int i = 0; i < _n_edges; i++) {
+        demo::protocol::Edge *edge = tm.add_edges();
+        edge->set_src(_edges[i].src);
+        edge->set_dst(_edges[i].dst);
+        edge->set_direction(_edges[i].direction);
+        edge->set_length(_edges[i].length);
+    }
+    
+    // routes
+    for (int i = 0, total = _n_vertices * _n_vertices; i < total; i++) {
+        demo::protocol::RouteNode *node = tm.add_routes();
+        node->set_distance(_route_table[i].distance);
+        node->set_next(_route_table[i].next);
+    }
+    
+    std::fstream output_file(pb_file_name, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!output_file) {
+        fprintf(stderr, "fstream output to %sfailed\n", pb_file_name);
+        return false;
+    }
+    if (!tm.SerializeToOstream(&output_file)) {
+        fprintf(stderr, "SerializeToOstream failed\n");
+        return false;
+    };
+    output_file.close();
+    return true;
+}
+bool tile_map::load_from_pb(const char *pb_file_name)
+{
+    demo::protocol::TileMap tm;
+    std::fstream input_file(pb_file_name, std::ios::in | std::ios::binary);
+    if (!input_file) {
+        fprintf(stderr, "fstream input from %s failed\n", pb_file_name);
+        return false;
+    }
+    
+    if (!tm.ParseFromIstream(&input_file)) {
+        fprintf(stderr, "ParseFromIstream failse\n");
+        return false;
+    }
+    
+    _width = tm.width();
+    _height = tm.height();
+    
+    // vertices
+    _n_vertices = tm.vertices_size();
+    _vertices = (vertex_t *)malloc(sizeof(vertex_t) * _n_vertices);
+    for (int i = 0; i < _n_vertices; i++) {
+        const demo::protocol::Vertex &vertex = tm.vertices(i);
+        _vertices[i].x = vertex.x();
+        _vertices[i].y = vertex.y();
+        _vertices[i].idx_out_edges[0] = vertex.idx_out_edges(0);
+        _vertices[i].idx_out_edges[1] = vertex.idx_out_edges(1);
+        _vertices[i].idx_out_edges[2] = vertex.idx_out_edges(2);
+        _vertices[i].idx_out_edges[3] = vertex.idx_out_edges(3);
+    }
+    
+    // edges
+    _n_edges = tm.edges_size();
+    _edges = (edge_t *)malloc(sizeof(edge_t) * _n_edges);
+    for (int i = 0; i < _n_edges; i++) {
+        const demo::protocol::Edge &edge = tm.edges(i);
+        _edges[i].src = edge.src();
+        _edges[i].dst = edge.dst();
+        _edges[i].direction = edge.direction();
+        _edges[i].length = edge.length();
+    }
+    
+    // routes
+    int total = _n_vertices * _n_vertices;
+    _route_table = (route_node_t *)malloc(sizeof(route_node_t) * total);
+    for (int i = 0; i < total; i++) {
+        const demo::protocol::RouteNode &node = tm.routes(i);
+        _route_table[i].distance = node.distance();
+        _route_table[i].next = node.next();
+    }
+    
+    input_file.close();
     return true;
 }
 

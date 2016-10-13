@@ -1,3 +1,5 @@
+package demo.protocol;
+
 enum MessageType {
   JOIN_ROOM_REQ = 10;
   JOIN_ROOM_RES = 11;
@@ -85,4 +87,30 @@ message Message {
   optional TimeSyncRes time_sync_res = 17;
 
   optional UpdateNtf update_ntf = 18;
+}
+
+message Vertex {
+  required uint32 x = 1;
+  required uint32 y = 2;
+  repeated int32 idx_out_edges = 3;
+}
+
+message Edge {
+  required uint32 src = 1;
+  required uint32 dst = 2;
+  required uint32 direction = 3;
+  required uint32 length = 4;
+}
+
+message RouteNode {
+  required uint32 distance = 1;
+  required uint32 next = 2;
+}
+
+message TileMap {
+  required uint32 width = 1;
+  required uint32 height = 2;
+  repeated Vertex vertices = 3;
+  repeated Edge edges = 4;
+  repeated RouteNode routes = 5;
 }

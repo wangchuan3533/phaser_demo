@@ -10,7 +10,7 @@ public:
     {
     }
     
-    void toEntity(Entity *entity);
+    void toEntity(demo::protocol::Entity *entity);
     
     inline uint32_t get_player_id()
     {

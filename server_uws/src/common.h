@@ -8,12 +8,16 @@
 #include <uWS.h>
 #include "messages.pb.h"
 
-#define DIRECTION_RIGHT 0
-#define DIRECTION_DOWN  1
-#define DIRECTION_LEFT  2
-#define DIRECTION_UP    3
-#define DIRECTION_VALID(dir) ((dir) >= 0 && (dir) <= 3)
-inline int32_t opposite_direction(int32_t direction)
+typedef enum direction {
+    DIRECTION_RIGHT = 0,
+    DIRECTION_DOWN  = 1,
+    DIRECTION_LEFT  = 2,
+    DIRECTION_UP    = 3,
+    DIRECTION_NONE  = 4
+} direction_t;
+
+#define DIRECTION_VALID(dir) ((dir) >= DIRECTION_RIGHT && (dir) <= DIRECTION_UP)
+inline uint32_t opposite_direction(uint32_t direction)
 {
     switch (direction) {
     case DIRECTION_UP:
@@ -25,7 +29,7 @@ inline int32_t opposite_direction(int32_t direction)
     case DIRECTION_RIGHT:
         return DIRECTION_LEFT;
     default:
-        return 4;
+        return DIRECTION_NONE;
     }
 }
 
@@ -38,7 +42,7 @@ inline int32_t opposite_direction(int32_t direction)
 typedef uWS::WebSocket<uWS::SERVER> connection_t;
 typedef uWS::UpgradeInfo upgrade_info_t;
 typedef uWS::OpCode opcode_t;
-typedef std::shared_ptr<ActionReq> action_req_shared_ptr;
+typedef std::shared_ptr<demo::protocol::ActionReq> action_req_shared_ptr;
 
 class server;
 class session;
