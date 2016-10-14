@@ -25,16 +25,15 @@ private:
 class conn_udp: public conn {
 public:
     
-    conn_udp(const struct sockaddr *addr, uv_loop_t *loop) : _addr(*addr)
+    conn_udp(const struct sockaddr *addr, uv_udp_t *uv_udp) : _addr(*addr), _uv_udp(uv_udp)
     {
-        uv_udp_init(loop, &_uv_udp_sock);
     }
     
     void send(void *data, size_t length)
     {
         uv_buf_t buf = uv_buf_init((char *)data, length);
         uv_udp_send_t *req = (uv_udp_send_t *)malloc(sizeof(uv_udp_send_t));
-        uv_udp_send(req, &_uv_udp_sock, &buf, 1, &_addr, udp_on_send);
+        uv_udp_send(req, _uv_udp, &buf, 1, &_addr, udp_on_send);
     }
     
     static void udp_on_send(uv_udp_send_t *req, int status)
@@ -46,7 +45,7 @@ public:
     }
     
 private:
-    uv_udp_t _uv_udp_sock;
+    uv_udp_t *_uv_udp;
     struct sockaddr _addr;
 };
 #endif

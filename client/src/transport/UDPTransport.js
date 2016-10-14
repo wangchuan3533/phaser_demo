@@ -8,9 +8,9 @@ const message = Buffer.from('Some bytes')
 //const PORT = 11111
 //const PORT = 5555
 //const HOST = 'localhost'
-//const HOST = '127.0.0.1'
-const HOST = '123.57.55.85'
-const PORT = 6666
+const HOST = '127.0.0.1'
+//const HOST = '123.57.55.85'
+const PORT = 11111
 
 export default {
   connect: function() {
