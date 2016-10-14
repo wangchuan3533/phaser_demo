@@ -1,5 +1,0 @@
-*.o
-server
-test
-src/messages.pb.h
-src/messages.pb.cc

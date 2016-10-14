@@ -47,7 +47,8 @@ module.exports = {
     ]
   },
   node: {
-    fs: 'empty'
+    fs: 'empty',
+    Buffer: false
   },
   resolve: {
     alias: {
@@ -55,5 +56,18 @@ module.exports = {
       'pixi': pixi,
       'p2': p2
     }
+  },
+  externals: {
+    'electron': 'require("electron")',
+    'net': 'require("net")',
+    'remote': 'require("remote")',
+    'shell': 'require("shell")',
+    'app': 'require("app")',
+    'ipc': 'require("ipc")',
+    'fs': 'require("fs")',
+    'buffer': 'require("buffer")',
+    'system': '{}',
+    'file': '{}',
+    'dgram': 'require("dgram")'
   }
 }

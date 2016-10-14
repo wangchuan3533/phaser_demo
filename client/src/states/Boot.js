@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import WSTransport from '../transport/WSTransport'
+import Transport from '../transport/Transport'
 import {decode} from '../protocol'
 
 export default class extends Phaser.State {
@@ -8,10 +8,9 @@ export default class extends Phaser.State {
   }
 
   preload () {
-    const transport = new WSTransport()
+    const transport = new Transport()
     transport.register('open', this.onOpen.bind(this))
     transport.register('close', this.onClose.bind(this))
-    
     transport.connect()
     this.game.transport = transport
     

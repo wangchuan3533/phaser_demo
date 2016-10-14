@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "author": "leandro cabrera <leandcabrera@gmail.com>",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "dev": "webpack",
     "deploy": "webpack --config webpack.production.config.js",
-    "test": "standard"
+    "test": "standard",
+    "start": "electron"
   },
   "license": "ISC",
   "devDependencies": {
@@ -21,7 +22,8 @@
     "expose-loader": "^0.7.1",
     "standard": "^7.1.2",
     "webfontloader": "^1.6.26",
-    "webpack": "^1.13.1"
+    "webpack": "^1.13.1",
+    "electron": "^1.4.3"
   },
   "dependencies": {
     "long": "^3.2.0",

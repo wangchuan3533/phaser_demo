@@ -1,7 +1,7 @@
 import protobuf from 'protobufjs'
 import camelcase from 'uppercamelcase'
 
-const builder = protobuf.loadProtoFile('/assets/proto/messages.proto')
+const builder = protobuf.loadProtoFile('./assets/proto/messages.proto')
 const namespace = 'demo.protocol.'
 
 export const MessageType = builder.build(namespace + 'MessageType')

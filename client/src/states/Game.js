@@ -4,6 +4,7 @@ import Shadow from '../sprites/Shadow'
 import {Direction, TILE_SIZE, Latency, TICK} from '../const'
 import TileMap from '../map/TileMap'
 import {Message, MessageType, Protocols} from '../protocol'
+import fs from 'fs'
 
 export default class extends Phaser.State {
   init() {
@@ -100,6 +101,7 @@ export default class extends Phaser.State {
         const client_recv_time = Date.now()
         const offset = ((message.server_recv_time - message.client_send_time) + (message.server_send_time - client_recv_time)) / 2
         const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_recv_time)
+        fs.appendFile('/tmp/hello', JSON.stringify({client_recv_time, offset, round_trip_time}) + '\n')
         this.game.transport.offset = offset
         this.game.transport.latency = round_trip_time
         break;

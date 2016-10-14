@@ -1,2 +1,0 @@
-- use protobuf as map file sturcture
-- use union message https://developers.google.com/protocol-buffers/docs/techniques?csw=1#union
