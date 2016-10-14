@@ -10,3 +10,6 @@
 [submodule "dep/ProtoBuf"]
 	path = dep/ProtoBuf
 	url = https://github.com/hultqvist/ProtoBuf.git
+[submodule "dep/libuv"]
+	path = dep/libuv
+	url = https://github.com/libuv/libuv
