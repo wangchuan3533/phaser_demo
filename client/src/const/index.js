@@ -1,4 +1,4 @@
-export const TILE_SIZE = 30
+export const TILE_SIZE = 20
 export const TileType = {
   TILE_TYPE_WALL: 0,
   TILE_TYPE_ROAD: 1

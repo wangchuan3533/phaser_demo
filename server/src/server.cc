@@ -99,6 +99,7 @@ void server::udp_on_recv(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, cons
         session *s = new session(cudp);
         s->set_nickname(buf->base, nread);
         svr->_udp_sessions[int_addr] = s;
+        s->send((void *)"world", 5);
         std::cout << "new udp player " << s->get_nickname() << " joined" << std::endl;
         return;
     }
