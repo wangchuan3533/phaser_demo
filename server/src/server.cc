@@ -93,7 +93,7 @@ void server::udp_on_recv(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, cons
     if (it == svr->_udp_sessions.end()) {
         if (strncmp("hello", (const char *)buf->base, 5)) return;
         char name[16];
-        uv_ip4_name((const struct sockaddr_in *)addr, name);
+        uv_ip4_name((const struct sockaddr_in *)addr, name, sizeof(name));
         std::cout << "remote address is " << name << std::endl;
         conn_udp *cudp = new conn_udp(addr, svr->_hub.getLoop());
         session *s = new session(cudp);
