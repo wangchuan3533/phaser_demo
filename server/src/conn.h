@@ -25,7 +25,7 @@ private:
 class conn_udp: public conn {
 public:
     
-    conn_udp(struct sockaddr *addr, uv_loop_t *loop) : _addr(*addr)
+    conn_udp(const struct sockaddr *addr, uv_loop_t *loop) : _addr(*addr)
     {
         uv_udp_init(loop, &_uv_udp_sock);
     }

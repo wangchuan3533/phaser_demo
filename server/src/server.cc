@@ -91,14 +91,8 @@ void server::udp_on_recv(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, cons
     auto it = svr->_udp_sessions.find(int_addr);
     
     if (it == svr->_udp_sessions.end()) {
-        char ip[16];
-        int port;
-        sscanf(buf->base, "%s%d", ip, &port);
-        printf("ip:%s port:%d", ip, port);
-        if (port != 22000) return;
-        struct sockaddr_in remote_addr;
-        uv_ip4_addr(ip, port, &remote_addr);
-        conn_udp *cudp = new conn_udp((struct sockaddr *)&remote_addr, svr->_hub.getLoop());
+        if (strncmp("hello", (const char *)buf->base, 5)) return;
+        conn_udp *cudp = new conn_udp(addr, svr->_hub.getLoop());
         session *s = new session(cudp);
         s->set_nickname(buf->base, nread);
         svr->_udp_sessions[int_addr] = s;

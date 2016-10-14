@@ -1,8 +1,10 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
+#include <memory>
 #include <cstdint>
 #include <ctime>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <uv.h>
 #include <uWS.h>
