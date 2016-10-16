@@ -134,6 +134,10 @@ export default class extends Phaser.State {
         }
         //console.log(message.entities)
         break
+      case MessageType.ACTION_RES:
+        message = message.action_res
+        this.player.action_res(message)
+        break
       default:
         
     }

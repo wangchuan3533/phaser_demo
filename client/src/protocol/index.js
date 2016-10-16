@@ -6,6 +6,8 @@ const namespace = 'demo.protocol.'
 
 export const MessageType = builder.build(namespace + 'MessageType')
 export const Message = builder.build(namespace + 'Message')
+export const Entity = builder.build(namespace + 'Entity')
+export const Action = builder.build(namespace + 'Action')
 export const Protocols = {}
 
 for (let messageType in MessageType) {

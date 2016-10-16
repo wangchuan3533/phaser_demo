@@ -40,11 +40,12 @@ inline uint32_t opposite_direction(uint32_t direction)
 
 #define TILE_SHIFT_BITS 10
 #define TICK_INTERVAL 50
+#define ACTION_BUF_SIZE 64
 
 typedef uWS::WebSocket<uWS::SERVER> uws_connt_t;
 typedef uWS::UpgradeInfo upgrade_info_t;
 typedef uWS::OpCode opcode_t;
-typedef std::shared_ptr<demo::protocol::ActionReq> action_req_shared_ptr;
+typedef std::shared_ptr<demo::protocol::Action> action_shared_ptr;
 
 class server;
 class session;

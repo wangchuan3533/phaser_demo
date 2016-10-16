@@ -118,9 +118,7 @@ void server::handle_message(session *s, char *message, size_t length)
     demo::protocol::Message message_req;
     demo::protocol::Message message_res;
     demo::protocol::JoinRoomRes *join_room_res;
-    demo::protocol::ActionRes *action_res;
     demo::protocol::TimeSyncRes *time_sync_res;
-    action_req_shared_ptr action_req;
     
     uint32_t room_id;
     room *r;
@@ -131,12 +129,12 @@ void server::handle_message(session *s, char *message, size_t length)
     
     switch (message_req.type()) {
     case demo::protocol::JOIN_ROOM_REQ:
-        room_id = message_req.join_room_req().room_id();
         join_room_res = message_res.mutable_join_room_res();
+        room_id = message_req.join_room_req().room_id();
         std::cout << "join room room_id " << room_id << std::endl;
         r = room::get_room(room_id);
         if (r) {
-            if (!(r->player_join(s, join_room_res))) {
+            if (!(r->player_join(s, message_req.join_room_req(), *join_room_res))) {
                 std::cerr << "join room failed" << std::endl;
                 join_room_res->set_ret(1);
             }
@@ -155,10 +153,7 @@ void server::handle_message(session *s, char *message, size_t length)
             break;
         }
         
-        action_req = std::make_shared<demo::protocol::ActionReq>();
-        action_req->CopyFrom(message_req.action_req());
-        action_res = message_res.mutable_action_res();
-        r->player_action(s->get_player_id(), action_req, action_res);
+        r->player_action(s->get_player_id(), message_req.action_req(), *message_res.mutable_action_res());
         
         message_res.set_type(demo::protocol::ACTION_RES);
         message_res.SerializeToString(&tmp);

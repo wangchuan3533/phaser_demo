@@ -15,6 +15,7 @@ export default class Transport {
     this.offset = 0
     this.latency = 0
     this.transport = UDPTransport
+    //this.transport = WSTransport
     
     this.transport.on('open', this.opencb.bind(this))
     this.transport.on('close', this.closecb.bind(this))
@@ -37,11 +38,10 @@ export default class Transport {
     }
   }
   
-  messsagecb(data) {
-    if (data.data) data = data.data
+  messsagecb(data, from) {
+    if (this.transport == WSTransport) data = data.data
     setTimeout(() => {
       const message = decode(data)
-      console.log(message)
       for (let i = 0; i < this.cbs.message.length; i++) {
         this.cbs.message[i](message)
       }

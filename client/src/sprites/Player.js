@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import Entity from './Entity'
 import {Direction, TILE_SIZE, TILE_SHIFT_BITS, Latency} from '../const'
-import {Message, MessageType, Protocols, decode} from '../protocol'
+import {Action, Message, MessageType, Protocols, decode} from '../protocol'
 const speed = 6 << TILE_SHIFT_BITS
 
 export default class Player extends Entity {
@@ -23,12 +23,14 @@ export default class Player extends Entity {
     
     this.now = this.game.time.time
     this.checkpoint = 0
+    this.actions = []
   }
   
   update() {
     const dt = this.game.time.time - this.now
     const delta = speed * dt / 1000
     this.now = this.game.time.time
+    if (this.actions.length > 0) this.sendAction()
     
     if (this.offset < this.edge.length) {
       if (this.direction == Direction.opposite(this.edge.direction)) {
@@ -56,20 +58,32 @@ export default class Player extends Entity {
   move(direction) {
     if (direction == this.direction || direction == this.edge.direction) return
     this.direction = direction
-    this.sendAction()
+    this.addAction()
   }
 
-  sendAction() {
-    const {ActionReq} = Protocols
+  addAction() {
     const elapsed = Math.floor(Date.now() + this.game.transport.offset - this.game.transport.start_time)
     const id = this.checkpoint++
     const direction = this.direction
     const index = this.index
     const offset = Math.floor(this.offset)
-    const action_req = new ActionReq({id, direction, index, offset, elapsed})
+    const action = new Action({id, direction, index, offset, elapsed})
+    this.actions.push(action)
+    console.log({id, direction, index, offset, elapsed})
+  }
+  
+  sendAction() {
+    const {ActionReq} = Protocols
+    const actions = this.actions.slice(0).reverse()
+    const elapsed = Math.floor(Date.now() + this.game.transport.offset - this.game.transport.start_time)
+    const action_req = new ActionReq({actions, elapsed})
     const type = MessageType.ACTION_REQ
     const message = new Message({type, action_req})
-    console.log({id, direction, index, offset, elapsed})
     this.game.transport.send(message)
+  }
+  
+  action_res(message) {
+    const id = message.id
+    this.actions = this.actions.filter(action => action.id > id)
   }
 }

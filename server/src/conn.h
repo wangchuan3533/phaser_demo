@@ -25,14 +25,17 @@ private:
 class conn_udp: public conn {
 public:
     
-    conn_udp(const struct sockaddr *addr, uv_udp_t *uv_udp) : _addr(*addr), _uv_udp(uv_udp)
+    conn_udp(const struct sockaddr *addr, uv_udp_t *uv_udp) : _uv_udp(uv_udp), _addr(*addr)
     {
     }
     
     void send(void *data, size_t length)
     {
-        uv_buf_t buf = uv_buf_init((char *)data, length);
+        char *copy = (char *)malloc(length);
+        memcpy(copy, data, length);
+        uv_buf_t buf = uv_buf_init(copy, length);
         uv_udp_send_t *req = (uv_udp_send_t *)malloc(sizeof(uv_udp_send_t));
+        req->data = copy;
         uv_udp_send(req, _uv_udp, &buf, 1, &_addr, udp_on_send);
     }
     
@@ -41,6 +44,7 @@ public:
         if (status != 0) {
             std::cerr << "udp send cb error " << uv_err_name(status) << std::endl;
         }
+        free(req->data);
         free(req);
     }
     

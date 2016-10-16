@@ -22,6 +22,14 @@ message Entity {
   required uint32 offset = 3;
 }
 
+message Action {
+  required uint32 id = 1;
+  required uint32 direction = 2;
+  required uint32 index = 3;
+  required uint32 offset = 4;
+  required uint32 elapsed = 5;
+}
+
 message JoinRoomReq {
   required uint32 room_id = 1;
 }
@@ -43,17 +51,13 @@ message LeaveRoomRes {
 }
 
 message ActionReq {
-  required uint32 id = 1;
-  required int32  direction = 2;
-  required uint32 index = 3;
-  required uint32 offset = 4;
-  required uint32 elapsed = 5;
+  repeated Action actions = 1;
+  required uint32 elapsed = 2;
 }
 
 message ActionRes {
   required int32 ret = 1;
   required uint32 id = 2;
-  required uint32 elapsed = 3;
 }
 
 message TimeSyncReq {

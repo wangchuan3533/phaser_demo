@@ -26,23 +26,23 @@ room::~room()
     delete _tile_map;
 }
 
-bool room::player_join(session *s, demo::protocol::JoinRoomRes *join_room_res)
+bool room::player_join(session *s, const demo::protocol::JoinRoomReq &join_room_req, demo::protocol::JoinRoomRes &join_room_res)
 {
     uint32_t player_id = _player_id_seed++;
     position_t pos = _tile_map->random_position();
     _players[player_id] = new player(*this, *s, player_id, pos.index, pos.offset);
     for (auto & it : _players) {
-        demo::protocol::Entity *entity = join_room_res->add_entities();
+        demo::protocol::Entity *entity = join_room_res.add_entities();
         it.second->toEntity(entity);
     }
     s->set_room(this);
     s->set_player_id(player_id);
     
-    join_room_res->set_ret(0);
-    join_room_res->set_room_id(_room_id);
-    join_room_res->set_player_id(player_id);
-    join_room_res->set_elapsed(_elapsed);
-    join_room_res->set_start_time(_start_time);
+    join_room_res.set_ret(0);
+    join_room_res.set_room_id(_room_id);
+    join_room_res.set_player_id(player_id);
+    join_room_res.set_elapsed(_elapsed);
+    join_room_res.set_start_time(_start_time);
     return true;
 }
 
@@ -56,20 +56,19 @@ bool room::player_leave(session *s)
     return true;
 }
 
-bool room::player_action(uint32_t player_id, action_req_shared_ptr action_req, demo::protocol::ActionRes *action_res)
+bool room::player_action(uint32_t player_id, const demo::protocol::ActionReq &action_req, demo::protocol::ActionRes &action_res)
 {
     uint64_t now = get_timestamp_millis();
     uint32_t now_elapsed = now - _start_time;
     player *p = _players[player_id];
-    int32_t latency = ((int32_t)now_elapsed) - ((int32_t)action_req->elapsed());
+    int32_t latency = ((int32_t)now_elapsed) - ((int32_t)action_req.elapsed());
     if (latency > p->_max_latency) p->_max_latency = latency;
-    _actions_queues[player_id].push_back(action_req);
+    p->action_add(action_req);
     std::cout << "[latency] " << latency << std::endl;
     std::cout << "[max_latency] " << p->_max_latency << std::endl;
     
-    action_res->set_ret(0);
-    action_res->set_id(0);
-    action_res->set_elapsed(_elapsed);
+    action_res.set_ret(0);
+    action_res.set_id(action_req.actions(0).id());
     return true;
 }
 
@@ -88,27 +87,26 @@ bool room::update()
     for (auto & it : _players) {
         uint32_t player_id = it.first;
         player *p = _players[player_id];
-        action_queue &q = _actions_queues[player_id];
-        if (!q.empty()) {
-            action_req_shared_ptr action_req = q.front();
-            uint32_t gap = ((int32_t)_elapsed) - ((int32_t)action_req->elapsed());
-            if (gap < p->_max_latency + 20) break;
+        action_shared_ptr &action = p->action_top();
+        if (action.use_count() > 0) {
+            uint32_t gap = ((int32_t)_elapsed) - ((int32_t)action->elapsed());
+            if (gap < p->_max_latency + 20) continue;
             
-            if (action_req->index() == p->_index) {
-                p->_direction = action_req->direction();
-            } else if (!p->_old_routes.empty() && action_req->index() == p->_old_routes.back()){
+            if (action->index() == p->_index) {
+                p->_direction = action->direction();
+            } else if (!p->_old_routes.empty() && action->index() == p->_old_routes.back()){
                 // TODO check
-                edge_t *old_edge = _tile_map->get_edge(action_req->index());
-                p->_index = action_req->index();
+                edge_t *old_edge = _tile_map->get_edge(action->index());
+                p->_index = action->index();
                 p->_offset = old_edge->length + p->_offset;
-                p->_direction = action_req->direction();
+                p->_direction = action->direction();
             } else {
-                std::cout << "action:" << action_req->index() << "," << action_req->offset() << "," << action_req->direction() << "," << std::endl;
+                std::cout << "action:" << action->index() << "," << action->offset() << "," << action->direction() << "," << std::endl;
                 std::cout << "player:" << p->_index << "," << p->_offset << "," << p->_direction << "," << std::endl;
                 continue;
                 //if (gap < p->_max_latency + 100) continue;
             }
-            q.pop_front();
+            p->action_pop();
         }
         
         edge_t *edge = _tile_map->get_edge(p->_index);
