@@ -91,7 +91,7 @@ bool room::update()
         action_shared_ptr &action = p->action_top();
         if (action.use_count() > 0) {
             uint32_t gap = ((int32_t)_elapsed) - ((int32_t)action->elapsed());
-            if (gap < p->_max_latency + 20) continue;
+            if (gap < p->_max_latency + 20) goto _update_pos;
             
             if (action->index() == p->_index) {
                 p->_direction = action->direction();
@@ -104,11 +104,12 @@ bool room::update()
             } else {
                 std::cout << "action:" << action->index() << "," << action->offset() << "," << action->direction() << "," << std::endl;
                 std::cout << "player:" << p->_index << "," << p->_offset << "," << p->_direction << "," << std::endl;
-                continue;
+                goto _update_pos;
                 //if (gap < p->_max_latency + 100) continue;
             }
             p->action_pop();
         }
+_update_pos:
         
         edge_t *edge = _tile_map->get_edge(p->_index);
         uint32_t delta_offset = speed * delta_time / 1000;

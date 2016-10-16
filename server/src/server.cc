@@ -85,8 +85,8 @@ void server::udp_on_recv(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, cons
     if (nread == 0 || addr == NULL) return;
     server *svr = (server *)req->data;
     uint64_t int_addr = addr2int((struct sockaddr_in *)addr);
-    std::cout << "int_addr" << int_addr << std::endl;
-    std::cout << "nread:" << nread << std::endl;
+    //std::cout << "int_addr" << int_addr << std::endl;
+    //std::cout << "nread:" << nread << std::endl;
     //std::cout << "length:" << buf->len << std::endl;
     auto it = svr->_udp_sessions.find(int_addr);
     
