@@ -31,9 +31,9 @@ public:
         return _player_id;
     }
     
-    inline void send(void *data, size_t length)
+    inline void send(package_shared_ptr &package, size_t length)
     {
-        _conn->send(data, length);
+        _conn->send(package, length);
     }
     
 private:

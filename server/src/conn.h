@@ -4,7 +4,7 @@
 
 class conn {
 public:
-    virtual void send(void *data, size_t length) = 0;
+    virtual void send(package_shared_ptr package, size_t length) = 0;
 };
 
 class conn_ws: public conn {
@@ -14,9 +14,9 @@ public:
         
     }
     
-    void send(void *data, size_t length)
+    void send(package_shared_ptr package, size_t length)
     {
-        _uws_conn.send((const char *)data, length, opcode_t::BINARY);
+        _uws_conn.send(package.get(), length, opcode_t::BINARY);
     }
 private:
     uws_connt_t _uws_conn;
@@ -29,13 +29,12 @@ public:
     {
     }
     
-    void send(void *data, size_t length)
+    void send(package_shared_ptr package, size_t length)
     {
-        char *copy = (char *)malloc(length);
-        memcpy(copy, data, length);
-        uv_buf_t buf = uv_buf_init(copy, length);
+        package_shared_ptr *ptr = new package_shared_ptr(package);
+        uv_buf_t buf = uv_buf_init(package.get(), length);
         uv_udp_send_t *req = (uv_udp_send_t *)malloc(sizeof(uv_udp_send_t));
-        req->data = copy;
+        req->data = ptr;
         uv_udp_send(req, _uv_udp, &buf, 1, &_addr, udp_on_send);
     }
     
@@ -44,7 +43,7 @@ public:
         if (status != 0) {
             std::cerr << "udp send cb error " << uv_err_name(status) << std::endl;
         }
-        free(req->data);
+        delete ((package_shared_ptr *)req->data);
         free(req);
     }
     

@@ -125,7 +125,6 @@ void server::handle_message(session *s, char *message, size_t length)
     
     message_req.ParseFromArray(message, length);
     //std::cout << "message type:" << message_req.type() << std::endl;
-    std::string tmp;
     
     switch (message_req.type()) {
     case demo::protocol::JOIN_ROOM_REQ:
@@ -143,8 +142,6 @@ void server::handle_message(session *s, char *message, size_t length)
         }
         
         message_res.set_type(demo::protocol::JOIN_ROOM_RES);
-        message_res.SerializeToString(&tmp);
-        s->send((void *)tmp.c_str(), tmp.size());
         break;
     case demo::protocol::ACTION_REQ:
         
@@ -154,11 +151,7 @@ void server::handle_message(session *s, char *message, size_t length)
         }
         
         r->player_action(s->get_player_id(), message_req.action_req(), *message_res.mutable_action_res());
-        
         message_res.set_type(demo::protocol::ACTION_RES);
-        message_res.SerializeToString(&tmp);
-        s->send((void *)tmp.c_str(), tmp.size());
-        
         break;
     case demo::protocol::TIME_SYNC_REQ:
         time_sync_res = message_res.mutable_time_sync_res();
@@ -166,12 +159,24 @@ void server::handle_message(session *s, char *message, size_t length)
         time_sync_res->set_server_recv_time(get_timestamp_millis());
         time_sync_res->set_server_send_time(get_timestamp_millis());
         message_res.set_type(demo::protocol::TIME_SYNC_RES);
-        message_res.SerializeToString(&tmp);
-        s->send((void *)tmp.c_str(), tmp.size());
         break;
     default:
         break;
     }
+    
+    size_t package_len = message_res.ByteSize();
+    if (package_len > PACKAGE_MTU) {
+        std::cerr << "message_res size bigger than mtu " << package_len << std::endl;
+        return;
+    }
+    
+    package_shared_ptr package((char *)malloc(PACKAGE_MTU), free);
+    if (!message_res.SerializeToArray(package.get(), PACKAGE_MTU)) {
+        std::cerr << "message_res serialize failed" << std::endl;
+        return;
+    }
+    
+    s->send(package, package_len);
 }
 
 void server::run()

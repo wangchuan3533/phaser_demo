@@ -81,6 +81,7 @@ bool room::update()
     
     demo::protocol::Message msg;
     demo::protocol::UpdateNtf *ntf = msg.mutable_update_ntf();
+    
     ntf->set_elapsed(_elapsed);
     
     //std::cout << "room tick" << std::endl;
@@ -138,11 +139,21 @@ bool room::update()
     }
     
     msg.set_type(demo::protocol::UPDATE_NTF);
-    std::string s;
-    msg.SerializeToString(&s);
+    
+    size_t package_len = msg.ByteSize();
+    if (package_len > PACKAGE_MTU) {
+        std::cerr << "package large than mtu " << package_len << std::endl;
+        return false;
+    }
+    
+    package_shared_ptr package((char *)malloc(PACKAGE_MTU), free);
+    if (!msg.SerializeToArray(package.get(), PACKAGE_MTU)) {
+        std::cerr << "package serialize failed " << std::endl;
+        return false;
+    }
     
     for (auto & it : _players) {
-        it.second->get_session().send((void *)s.c_str(), s.size());
+        it.second->get_session().send(package, package_len);
     }
     
     return true;
