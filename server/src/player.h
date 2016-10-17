@@ -79,6 +79,7 @@ private:
     uint32_t _action_count;
     // ring buffer front
     uint32_t _action_top;
+    uint32_t _last_action_id;
     friend class room;
 };
 #endif

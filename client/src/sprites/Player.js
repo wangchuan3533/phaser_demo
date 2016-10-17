@@ -12,7 +12,7 @@ export default class Player extends Entity {
     this.animations.add('left', [0, 1, 2, 3], 10, true)
     this.animations.add('right', [5, 6, 7, 8], 10, true)
     
-    this.origScale = 0.7
+    this.origScale = 1.7
     this.scale.setTo(this.origScale, this.origScale)
     
     this.graph = opts.graph

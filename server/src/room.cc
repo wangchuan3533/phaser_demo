@@ -108,6 +108,7 @@ bool room::update()
                 continue;
                 //if (gap < p->_max_latency + 100) continue;
             }
+            p->_last_action_id = action->id();
             p->action_pop();
         }
     }

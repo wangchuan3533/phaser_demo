@@ -178,7 +178,7 @@ export default class extends Phaser.State {
   
   update() {
     const lerp = this.game.transport.lerp
-    const now = this.getClientTime() - lerp
+    const renderTime = this.getClientTime() - lerp
     this.updateDebugInfo()
     
     for (let id in this.players) {
@@ -192,7 +192,7 @@ export default class extends Phaser.State {
       const shadow = this.shadows[id]
       const checkpoints = shadow.checkpoints
       const fromIndex = checkpoints.findIndex((checkpoint) => {
-        return checkpoint.elapsed > now
+        return checkpoint.elapsed > renderTime
       }) - 1
       if (fromIndex < 0) {
         console.log('no from')
@@ -207,7 +207,7 @@ export default class extends Phaser.State {
       console.log({fromIndex, total: checkpoints.length})
       const fromPos = this.map.pos_to_xy(from.index, from.offset)
       const toPos = this.map.pos_to_xy(to.index, to.offset)
-      const k = (now - from.elapsed) / (to.elapsed - from.elapsed)
+      const k = (renderTime - from.elapsed) / (to.elapsed - from.elapsed)
       const x = fromPos.x + (toPos.x - fromPos.x) * k
       const y = fromPos.y + (toPos.y - fromPos.y) * k
       shadow.x = x * TILE_SIZE
