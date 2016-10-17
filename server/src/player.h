@@ -6,7 +6,7 @@
 class player {
 public:
     player(room &room, session &session, uint32_t player_id, uint32_t index, uint32_t offset)
-    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _direction(-1), _max_latency(0), _action_count(0)
+    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _direction(-1), _max_latency(0), _action_top(0), _action_count(0)
     {
     }
     
@@ -45,8 +45,7 @@ public:
     }
     
     action_shared_ptr& action_top() {
-        uint32_t idx = _id_max_processed & (ACTION_BUF_SIZE - 1);
-        _action_count--;
+        uint32_t idx = _action_top & (ACTION_BUF_SIZE - 1);
         return _actions[idx];
     }
     
@@ -55,7 +54,8 @@ public:
     }
     
     void action_pop() {
-        _id_max_processed++;
+        _action_top++;
+        _action_count--;
     }
     
 private:
@@ -78,7 +78,7 @@ private:
     action_shared_ptr _actions[ACTION_BUF_SIZE];
     uint32_t _action_count;
     // ring buffer front
-    uint32_t _id_max_processed;
+    uint32_t _action_top;
     friend class room;
 };
 #endif
