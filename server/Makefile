@@ -2,7 +2,8 @@ CC = c++
 PROTOC = protoc
 CFLAGS = -I../dep/tmx/src -I../dep/uWebSockets/src -g -std=c++11 -Wall
 LDFLAGS = -L../dep/tmx/build -ltmx -luWS -lz -lxml2 -luv -lprotobuf
-SOURCES = src/tile_map.cc src/main.cc
+HEADERS = $(wildcard src/*.h) src/messages.pb.h
+SOURCES = $(wildcard src/*.cc)
 
 all: server test
 
@@ -21,7 +22,7 @@ server: src/main.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/
 test: src/test.o src/tile_map.o src/messages.pb.o src/server.o src/room.o src/session.o src/player.o
 	${CC} -o $@ $^ ${LDFLAGS}
 
-src/%.o: src/%.cc src/messages.pb.h
+src/%.o: src/%.cc $(HEADERS)
 	${CC} -o $@ ${CFLAGS} -c $<
 
 src/messages.pb.cc: proto/messages.proto
@@ -29,3 +30,4 @@ src/messages.pb.cc: proto/messages.proto
 
 src/messages.pb.h: proto/messages.proto
 	${PROTOC} --proto_path=proto --cpp_out=src $^
+

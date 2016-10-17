@@ -1,0 +1,53 @@
+main.o: src/main.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/room.h src/tile_map.h src/server.h src/session.h \
+  src/conn.h
+messages.pb.o: src/messages.pb.cc src/messages.pb.h
+player.o: src/player.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/player.h
+room.o: src/room.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/room.h src/tile_map.h src/player.h src/session.h \
+  src/conn.h
+server.o: src/server.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/server.h src/session.h src/conn.h src/room.h \
+  src/tile_map.h src/player.h
+session.o: src/session.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/session.h src/conn.h
+test.o: src/test.cc src/common.h ../dep/uWebSockets/src/uWS.h \
+  ../dep/uWebSockets/src/Hub.h ../dep/uWebSockets/src/Group.h \
+  ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/tile_map.h
+tile_map.o: src/tile_map.cc ../dep/tmx/src/tmx.h src/common.h \
+  ../dep/uWebSockets/src/uWS.h ../dep/uWebSockets/src/Hub.h \
+  ../dep/uWebSockets/src/Group.h ../dep/uWebSockets/src/WebSocket.h \
+  ../dep/uWebSockets/src/WebSocketProtocol.h \
+  ../dep/uWebSockets/src/Networking.h ../dep/uWebSockets/src/Socket.h \
+  ../dep/uWebSockets/src/Extensions.h ../dep/uWebSockets/src/Node.h \
+  src/messages.pb.h src/tile_map.h

@@ -24,13 +24,16 @@ export default class Player extends Entity {
     this.now = this.game.time.time
     this.checkpoint = 0
     this.actions = []
+    this.tick = 0
   }
   
   update() {
+    this.tick++
     const dt = this.game.time.time - this.now
     const delta = speed * dt / 1000
     this.now = this.game.time.time
-    if (this.actions.length > 0) this.sendAction()
+    
+    if (this.tick % 2 == 0 && this.actions.length > 0) this.sendAction()
     
     if (this.offset < this.edge.length) {
       if (this.direction == Direction.opposite(this.edge.direction)) {

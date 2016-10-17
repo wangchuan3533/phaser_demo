@@ -1,10 +1,10 @@
 import Phaser from 'phaser'
 import Player from '../sprites/Player'
 import Shadow from '../sprites/Shadow'
-import {Direction, TILE_SIZE, Latency, TICK} from '../const'
+import {Direction, TILE_SIZE, Latency, SERVER_TICK} from '../const'
 import TileMap from '../map/TileMap'
 import {Message, MessageType, Protocols} from '../protocol'
-import fs from 'fs'
+import Log from '../util/Log'
 
 export default class extends Phaser.State {
   init() {
@@ -38,7 +38,7 @@ export default class extends Phaser.State {
     
     // debug info
     this.game.time.advancedTiming = true
-    const debugInfo = this.add.text(this.world.width - 128, 52, 'debug info', { font: '16px Arial', fill: '#eeeeee', align: 'center' })
+    const debugInfo = this.add.text(this.world.width - 128, 72, 'debug info', { font: '16px Arial', fill: '#eeeeee', align: 'center' })
     debugInfo.anchor.setTo(0.5, 0.5)
     this.debugInfo = debugInfo
   }
@@ -61,9 +61,22 @@ export default class extends Phaser.State {
       const dst = this.map.getVertex(edge.dst)
       graphics.moveTo(src.x * TILE_SIZE, src.y * TILE_SIZE)
       graphics.lineTo(dst.x * TILE_SIZE, dst.y * TILE_SIZE)
-      if (edge.direction == Direction.DIRECTION_RIGHT || edge.direction == Direction.DIRECTION_DOWN) {
-        this.add.text((src.x + dst.x) / 2 * TILE_SIZE, (src.y + dst.y) / 2 * TILE_SIZE, i, {font: '10px', fill: '#eeeeee'})
+      let x = (src.x + dst.x) / 2 * TILE_SIZE
+      let y = (src.y + dst.y) / 2 * TILE_SIZE
+      switch (edge.direction) {
+      case Direction.DIRECTION_UP:
+        x -= TILE_SIZE / 2
+        break
+      case Direction.DIRECTION_DOWN:
+        x += 10
+        break
+      case Direction.DIRECTION_LEFT:
+        break
+      case Direction.DIRECTION_RIGHT:
+        y -= 10
+        break
       }
+      this.add.text(x, y, i, {font: '10px', fill: '#eeeeee'})
     }
     
     graphics.endFill()
@@ -101,9 +114,11 @@ export default class extends Phaser.State {
         const client_recv_time = Date.now()
         const offset = ((message.server_recv_time - message.client_send_time) + (message.server_send_time - client_recv_time)) / 2
         const round_trip_time = (client_recv_time - message.client_send_time) - (message.server_send_time - message.server_recv_time)
-        fs.appendFile('/tmp/hello', JSON.stringify({client_recv_time, offset, round_trip_time}) + '\n')
         this.game.transport.offset = offset
         this.game.transport.latency = round_trip_time
+        if (this.game.transport.lerp < this.game.transport.latency) {
+          this.game.transport.lerp += SERVER_TICK
+        }
         break;
       case MessageType.JOIN_ROOM_RES:
         message = message.join_room_res
@@ -162,10 +177,9 @@ export default class extends Phaser.State {
   }
   
   update() {
-    const lerp = 40 + this.game.transport.latency * 2
+    const lerp = this.game.transport.lerp
     const now = this.getClientTime() - lerp
-    
-    this.debugInfo.text = `fps: ${this.game.time.fps}\nlatency: ${this.game.transport.latency}\noffset: ${this.game.transport.offset}`
+    this.updateDebugInfo()
     
     for (let id in this.players) {
       const player = this.players[id]
@@ -190,6 +204,7 @@ export default class extends Phaser.State {
         console.log('no to')
         continue
       }
+      console.log({fromIndex, total: checkpoints.length})
       const fromPos = this.map.pos_to_xy(from.index, from.offset)
       const toPos = this.map.pos_to_xy(to.index, to.offset)
       const k = (now - from.elapsed) / (to.elapsed - from.elapsed)
@@ -200,6 +215,15 @@ export default class extends Phaser.State {
       //console.log({fromIndex, length: checkpoints.length})
       shadow.checkpoints = checkpoints.slice(fromIndex)
     }
+  }
+  
+  updateDebugInfo() {
+    this.debugInfo.text = ''
+    this.debugInfo.text += `fps: ${this.game.time.fps}\n`
+    this.debugInfo.text += `latency: ${this.game.transport.latency}\n`
+    this.debugInfo.text += `offset: ${this.game.transport.offset}\n`
+    this.debugInfo.text += `lerp: ${this.game.transport.lerp}\n`
+    
   }
   
   render() {

@@ -1,4 +1,4 @@
-export const TILE_SIZE = 20
+export const TILE_SIZE = 30
 export const TileType = {
   TILE_TYPE_WALL: 0,
   TILE_TYPE_ROAD: 1
@@ -31,11 +31,11 @@ export const Direction = {
 }
 
 export const Latency = {
-  MIN: 1,
-  MAX: 1,
+  MIN: 50,
+  MAX: 50,
   random: function() {
     return this.MIN + Math.random() * (this.MAX - this.MIN)
   }
 }
 
-export const TICK = 60
+export const SERVER_TICK = 50

@@ -6,7 +6,7 @@
 class player {
 public:
     player(room &room, session &session, uint32_t player_id, uint32_t index, uint32_t offset)
-    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _direction(-1), _max_latency(0)
+    : _room(room), _session(session), _player_id(player_id), _index(index), _offset(offset), _direction(-1), _max_latency(0), _action_count(0)
     {
     }
     
@@ -40,12 +40,18 @@ public:
             }
             _actions[idx] = std::make_shared<demo::protocol::Action>();
             _actions[idx]->CopyFrom(action);
+            _action_count++;
         }
     }
     
     action_shared_ptr& action_top() {
         uint32_t idx = _id_max_processed & (ACTION_BUF_SIZE - 1);
+        _action_count--;
         return _actions[idx];
+    }
+    
+    uint32_t action_count() {
+        return _action_count;
     }
     
     void action_pop() {
@@ -70,6 +76,7 @@ private:
     std::queue<uint32_t> _old_routes;
     // ring buffer
     action_shared_ptr _actions[ACTION_BUF_SIZE];
+    uint32_t _action_count;
     // ring buffer front
     uint32_t _id_max_processed;
     friend class room;

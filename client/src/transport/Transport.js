@@ -1,4 +1,4 @@
-import {Latency} from '../const'
+import {Latency, SERVER_TICK} from '../const'
 import {MessageType, Message, decode} from '../protocol'
 import WSTransport from './WSTransport'
 import UDPTransport from './UDPTransport'
@@ -14,6 +14,7 @@ export default class Transport {
     this.start_time = 0
     this.offset = 0
     this.latency = 0
+    this.lerp = 2 * SERVER_TICK
     this.transport = UDPTransport
     //this.transport = WSTransport
     

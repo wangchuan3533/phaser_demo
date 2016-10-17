@@ -85,13 +85,14 @@ bool room::update()
     ntf->set_elapsed(_elapsed);
     
     //std::cout << "room tick" << std::endl;
+    // exec actions
     for (auto & it : _players) {
         uint32_t player_id = it.first;
         player *p = _players[player_id];
-        action_shared_ptr &action = p->action_top();
-        if (action.use_count() > 0) {
+        if (p->action_count() > 0) {
+            action_shared_ptr &action = p->action_top();
             uint32_t gap = ((int32_t)_elapsed) - ((int32_t)action->elapsed());
-            if (gap < p->_max_latency + 20) goto _update_pos;
+            if (gap < p->_max_latency + 20) continue;
             
             if (action->index() == p->_index) {
                 p->_direction = action->direction();
@@ -104,13 +105,17 @@ bool room::update()
             } else {
                 std::cout << "action:" << action->index() << "," << action->offset() << "," << action->direction() << "," << std::endl;
                 std::cout << "player:" << p->_index << "," << p->_offset << "," << p->_direction << "," << std::endl;
-                goto _update_pos;
+                continue;
                 //if (gap < p->_max_latency + 100) continue;
             }
             p->action_pop();
         }
-_update_pos:
-        
+    }
+    
+    // update positions
+    for (auto & it : _players) {
+        uint32_t player_id = it.first;
+        player *p = _players[player_id];
         edge_t *edge = _tile_map->get_edge(p->_index);
         uint32_t delta_offset = speed * delta_time / 1000;
         if (p->_offset < edge->length) {
